@@ -1,0 +1,19 @@
+services:
+  database:
+    container_name: database
+    image: postgres:16.3
+    ports:
+      - 5432:5432
+    volumes:
+      - database:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    healthcheck:
+      test: pg_isready
+      interval: 1s
+      retries: 20
+
+volumes:
+  database:

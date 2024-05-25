@@ -1,0 +1,77 @@
+foreign {
+  neut_ars_postgres_v0_1_CONNECTION_OK(): int,
+  neut_ars_postgres_v0_1_PGRES_EMPTY_QUERY(): int,
+  neut_ars_postgres_v0_1_PGRES_TUPLES_OK(): int,
+  neut_ars_postgres_v0_1_PGRES_COMMAND_OK(): int,
+  neut_ars_postgres_v0_1_PGRES_COPY_OUT(): int,
+  neut_ars_postgres_v0_1_PGRES_COPY_IN(): int,
+  neut_ars_postgres_v0_1_PGRES_BAD_RESPONSE(): int,
+  neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR(): int,
+  neut_ars_postgres_v0_1_PGRES_FATAL_ERROR(): int,
+  neut_ars_postgres_v0_1_OID_SIZE(): int,
+  neut_ars_postgres_v0_1_INT8OID(): int,
+  neut_ars_postgres_v0_1_FLOAT8OID(): int,
+  neut_ars_postgres_v0_1_TEXTOID(): int,
+  neut_ars_postgres_v0_1_TIMEOID(): int,
+  neut_ars_postgres_v0_1_TIMESTAMPTZOID(): int,
+}
+
+constant CONNECTION_OK: int {
+  magic external neut_ars_postgres_v0_1_CONNECTION_OK()
+}
+
+constant PGRES_EMPTY_QUERY: int {
+  magic external neut_ars_postgres_v0_1_PGRES_EMPTY_QUERY()
+}
+
+constant PGRES_TUPLES_OK: int {
+  magic external neut_ars_postgres_v0_1_PGRES_TUPLES_OK()
+}
+
+constant PGRES_COMMAND_OK: int {
+  magic external neut_ars_postgres_v0_1_PGRES_COMMAND_OK()
+}
+
+constant PGRES_COPY_OUT: int {
+  magic external neut_ars_postgres_v0_1_PGRES_COPY_OUT()
+}
+
+constant PGRES_COPY_IN: int {
+  magic external neut_ars_postgres_v0_1_PGRES_COPY_IN()
+}
+
+constant PGRES_BAD_RESPONSE: int {
+  magic external neut_ars_postgres_v0_1_PGRES_BAD_RESPONSE()
+}
+
+constant PGRES_NONFATAL_ERROR: int {
+  magic external neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR()
+}
+
+constant PGRES_FATAL_ERROR: int {
+  magic external neut_ars_postgres_v0_1_PGRES_FATAL_ERROR()
+}
+
+constant OID_SIZE: int {
+  magic external neut_ars_postgres_v0_1_OID_SIZE()
+}
+
+constant INT8OID: int {
+  magic external neut_ars_postgres_v0_1_INT8OID()
+}
+
+constant FLOAT8OID: int {
+  magic external neut_ars_postgres_v0_1_FLOAT8OID()
+}
+
+constant TEXTOID: int {
+  magic external neut_ars_postgres_v0_1_TEXTOID()
+}
+
+constant TIMEOID: int {
+  magic external neut_ars_postgres_v0_1_TIMEOID()
+}
+
+constant TIMESTAMPTZOID: int {
+  magic external neut_ars_postgres_v0_1_TIMESTAMPTZOID()
+}

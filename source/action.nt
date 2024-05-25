@@ -1,0 +1,151 @@
+import {
+  core.control {discard},
+  core.memory {store-int},
+  core.text {_from-c-string, _get-content-pointer},
+  core.word,
+  this.command {Command, command},
+  this.connection {connection},
+  this.foreign {
+    OID_SIZE,
+    PGRES_COMMAND_OK,
+    PGRES_TUPLES_OK,
+  },
+  this.parameter {Prepared-Command, _prepare, preparation-error},
+  this.table {encoder-error, table},
+}
+
+foreign {
+  PQexec(pointer, pointer): pointer,
+  PQexecParams(pointer, pointer, int, pointer, pointer, pointer, pointer, int): pointer,
+  PQresultStatus(pointer): int,
+  PQresultErrorMessage(pointer): pointer,
+  PQclear(pointer): void,
+}
+
+data error {
+| Preparation-Error(preparation-error)
+| Command-Error(status: int, message: text)
+| Encoder-Error(detail: encoder-error)
+}
+
+define _store-elems(elems: &list(pair(int, text)), ptr: int): unit {
+  case elems {
+  | Nil =>
+    Unit
+  | Cons(Pair(_, x), xs) =>
+    store-int(_get-content-pointer(x), ptr);
+    _store-elems(xs, add-int(ptr, core.word.size))
+  }
+}
+
+define _store-oids(elems: &list(pair(int, text)), ptr: int): unit {
+  case elems {
+  | Nil =>
+    Unit
+  | Cons(Pair(oid, _), xs) =>
+    store-int(*oid, ptr);
+    _store-oids(xs, add-int(ptr, OID_SIZE))
+  }
+}
+
+define _command-completed-p(status: int): bool {
+  if eq-int(status, PGRES_COMMAND_OK) {
+    True
+  } else-if eq-int(status, PGRES_TUPLES_OK) {
+    True
+  } else {
+    False
+  }
+}
+
+define batch(c: &connection, com: &text): either(error, unit) {
+  let result: table = magic external PQexec(c, _get-content-pointer(com)) in
+  let status = magic external PQresultStatus(result) in
+  if _command-completed-p(status) {
+    Right(Unit)
+  } else {
+    let error-message = _from-c-string(magic external PQresultErrorMessage(result)) in
+    Left(Command-Error(status, error-message))
+  }
+}
+
+define begin(c: &connection): either(error, unit) {
+  batch(c, "begin")
+}
+
+define commit(c: &connection): either(error, unit) {
+  batch(c, "commit")
+}
+
+define rollback(c: &connection): either(error, unit) {
+  batch(c, "rollback")
+}
+
+define with-transaction<a>(c: &connection, action: () -> either(error, a)): either(error, a) {
+  try _ = begin(c) in
+  match action() {
+  | Right(result) =>
+    try _ = commit(c) in
+    Right(result)
+  | Left(e) =>
+    try _ = rollback(c) in
+    Left(e)
+  }
+}
+
+constant zero: int {
+  0
+}
+
+inline _exec-params(
+  c: &connection,
+  template: text,
+  parameters: list(pair(int, text)),
+): &table {
+  let num-of-params on parameters = length(parameters) in
+  let param-values = magic alloca(int, num-of-params) in
+  let param-types = magic alloca(int, num-of-params) in
+  let _ on parameters = _store-elems(parameters, param-values) in
+  let _ on parameters = _store-oids(parameters, param-types) in
+  let result: table on template =
+    magic external PQexecParams(
+      c,
+      _get-content-pointer(template),
+      num-of-params,
+      param-types,
+      param-values,
+      zero,
+      zero,
+      zero,
+    )
+  in
+  discard(parameters);
+  let _ = template in
+  magic cast(table, &table, result)
+}
+
+inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
+  let Command of {template, parameters, result-encoder} = com in
+  match _prepare(template, parameters) {
+  | Left(e) =>
+    Left(Preparation-Error(e))
+  | Right(Prepared-Command(template, parameters)) =>
+    let result = _exec-params(conn, template, parameters) in
+    let status = magic external PQresultStatus(result) in
+    if _command-completed-p(status) {
+      let encoded-result = result-encoder(result) in
+      magic external PQclear(result);
+      match encoded-result {
+      | Right(v) =>
+        Right(v)
+      | Left(e) =>
+        Left(Encoder-Error(e))
+      }
+    } else {
+      // ignore COPY commands for now
+      let error-message = _from-c-string(magic external PQresultErrorMessage(result)) in
+      magic external PQclear(result);
+      Left(Command-Error(status, error-message))
+    }
+  }
+}

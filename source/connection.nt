@@ -1,0 +1,90 @@
+import {
+  core.text {_from-c-string, _get-content-pointer, format},
+  this.foreign {CONNECTION_OK},
+}
+
+foreign {
+  PQconnectdb(pointer): pointer,
+  PQstatus(pointer): int,
+  PQfinish(pointer): int,
+  PQhost(pointer): pointer,
+  PQport(pointer): pointer,
+  PQdb(pointer): pointer,
+  PQuser(pointer): pointer,
+  PQpass(pointer): pointer,
+  PQerrorMessage(pointer): pointer,
+}
+
+data conninfo {
+| Conn-Info(
+    host: text,
+    port: text,
+    dbname: text,
+    user: text,
+    password: text,
+  )
+}
+
+data connection-error {
+| Connection-Error(message: text)
+}
+
+nominal {
+  connection: tau,
+  _connection: tau,
+  connect(c: conninfo): either(connection-error, connection),
+}
+
+resource _connection {
+  function (ptr) {
+    magic external PQfinish(ptr)
+  },
+  function (ptr) {
+    let host = _from-c-string(magic external PQhost(ptr)) in
+    let port = _from-c-string(magic external PQport(ptr)) in
+    let dbname = _from-c-string(magic external PQdb(ptr)) in
+    let user = _from-c-string(magic external PQuser(ptr)) in
+    let password = _from-c-string(magic external PQpass(ptr)) in
+    let new-conn = connect(Conn-Info of {host, port, dbname, user, password}) in
+    match new-conn {
+    | Right(c) =>
+      magic cast(connection, int, c)
+    | Left(_) =>
+      let message =
+        format(
+          "failed to clone the following connection:\nhost={} port={} dbname={} user={} password=<hidden>\n",
+          [host, port, dbname, user],
+        )
+      in
+      let unreachable on message = panic(message) in
+      let _ = message in
+      unreachable
+    }
+  },
+}
+
+data connection {
+| _Connection(_connection)
+}
+
+define connect(c: conninfo): either(connection-error, connection) {
+  let Conn-Info of {host, port, dbname, user, password} = c in
+  let conn-text =
+    format("host={} port={} dbname={} user={} password={}\0", [
+      host,
+      port,
+      dbname,
+      user,
+      password,
+    ])
+  in
+  let conn on conn-text = magic external PQconnectdb(_get-content-pointer(conn-text)) in
+  let _ = conn-text in
+  let status: int on conn = magic external PQstatus(conn) in
+  if eq-int(status, CONNECTION_OK) {
+    Right(conn)
+  } else {
+    let error-message = magic external PQerrorMessage(conn) in
+    Left(Connection-Error(_from-c-string(error-message)))
+  }
+}

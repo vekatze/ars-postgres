@@ -1,0 +1,24 @@
+import {
+  this.parameter {parameter},
+  this.table {encoder-error, table},
+}
+
+data command(a) {
+| Command(
+    template: &text,
+    parameters: list(pair(&text, parameter)),
+    result-encoder: (&table) -> either(encoder-error, a),
+  )
+}
+
+define void-encoder(_: &table): either(encoder-error, unit) {
+  Right(Unit)
+}
+
+define statement(t: &text): command(unit) {
+  Command of {
+    template = t,
+    parameters = [],
+    result-encoder = void-encoder,
+  }
+}

@@ -1,0 +1,115 @@
+import {
+  core.control {try-loop},
+  this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
+  this.command {Command, command},
+  this.connection {Conn-Info, Connection-Error, connect},
+  this.parameter {Integer, Text, Time, Timestamp, Unknown-Placeholder},
+  this.table {encode-text, encode-time, get-column-by-name, get-row-size, table},
+  time.time {get-time, time, to-ISO8601-local},
+  static {
+    insert-user,
+    reset,
+    select-user,
+  },
+}
+
+constant my-conn: this.connection.conninfo {
+  Conn-Info of {
+    host = *"127.0.0.1",
+    port = *"5432",
+    dbname = *"sample",
+    user = *"username",
+    password = *"password",
+  }
+}
+
+define insert-user(name: &text, now: time): command(unit) {
+  Command of {
+    template = include-text(insert-user),
+    parameters = {
+      [
+        Pair("__NAME__", Text(*name)),
+        Pair("__MY_TIME__", Time(*"11:23")),
+        Pair("__TIMESTAMP__", Timestamp(now)),
+      ]
+    },
+    result-encoder = {
+      function (_: &table) {
+        Right(Unit)
+      }
+    },
+  }
+}
+
+define select-user(limit: int): command(unit) {
+  Command of {
+    template = include-text(select-user),
+    parameters = {
+      [
+        Pair("__LIMIT__", Integer(limit)),
+        Pair("__EPOCH__", Timestamp(time.time.Time of {seconds = 0, nanoseconds = 0})),
+      ]
+    },
+    result-encoder = {
+      function (res: &table) {
+        let row-size = get-row-size(res) in
+        try user-name-column = get-column-by-name(res, "name") in
+        try user-created-at-column = get-column-by-name(res, "created_at") in
+        try-loop(row-size, function (r) {
+          try name = encode-text(res, r, user-name-column) in
+          try created-at = encode-time(res, r, user-created-at-column) in
+          printf("{} {}\n", [name, to-ISO8601-local(created-at, 6)]);
+          Right(Unit)
+        })
+      }
+    },
+  }
+}
+
+define main(): unit {
+  let n = get-time() in
+  let conn-or-none = connect(my-conn) in
+  match conn-or-none {
+  | Right(conn) =>
+    let result on conn =
+      with-transaction(conn, function () {
+        try _ = batch(conn, include-text(reset)) in
+        try _ = execute(conn, insert-user("Virginia Woolf", n)) in
+        try _ =
+          execute(conn, insert-user(
+            "Aristotle",
+            time.time.Time of {seconds = -9999999, nanoseconds = 123456789},
+          ))
+        in
+        try _ = execute(conn, insert-user("李白", n)) in
+        try _ = execute(conn, insert-user("Emily Dickinson", n)) in
+        try _ = execute(conn, insert-user("宮沢賢治", n)) in
+        try _ = execute(conn, insert-user("Stefan Zweig", n)) in
+        execute(conn, select-user(20))
+      })
+    in
+    let _ = conn in
+    match result {
+    | Right(_) =>
+      print("success!\n")
+    | Left(e) =>
+      match e {
+      | Command-Error(_, message) =>
+        printf("command-error:\n{}\n", [message])
+      | Encoder-Error(_) =>
+        print("encoder-error\n")
+      | Preparation-Error(e) =>
+        match e {
+        | Unknown-Placeholder(k) =>
+          printf("preparation-error\nunknown placeholder: {}\n", [k])
+        }
+      }
+    }
+  | Left(Connection-Error(message)) =>
+    printf("{}", [message])
+  }
+}
+
+define zen(): unit {
+  main()
+}

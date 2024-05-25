@@ -1,0 +1,115 @@
+import {
+  core.list {for-each},
+  core.text {format, intercalate},
+  this.foreign {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
+  time.time {time, to-ISO8601-UTC},
+}
+
+data parameter {
+| Integer(int)
+| Float(float)
+| Text(text)
+| Time(text)
+| Timestamp(time)
+| Tuple(list(parameter))
+}
+
+constant oid: tau {
+  int
+}
+
+constant sql-param: tau {
+  pair(oid, text)
+}
+
+define _new-placeholder(counter: &cell(int)): text {
+  let i = *core.cell.read(counter) in
+  mutate(counter, function (x) {
+    add-int(x, 1)
+  });
+  format("${}", [%ld(i)])
+}
+
+define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-param)) {
+  match p {
+  | Integer(x) =>
+    Pair(_new-placeholder(counter), [Pair(INT8OID, format("{}\0", [%ld(x)]))])
+  | Float(x) =>
+    Pair(_new-placeholder(counter), [Pair(FLOAT8OID, format("{}\0", [%lf(x)]))])
+  | Text(x) =>
+    Pair(_new-placeholder(counter), [Pair(TEXTOID, format("{}\0", [x]))])
+  | Time(x) =>
+    Pair(_new-placeholder(counter), [Pair(TIMEOID, format("{}\0", [x]))])
+  | Timestamp(t) =>
+    let t = format("{}\0", [to-ISO8601-UTC(t, 6)]) in
+    Pair(_new-placeholder(counter), [Pair(TIMESTAMPTZOID, t)])
+  | Tuple(ps) =>
+    let Pair(xs, pss) =
+      unzip(for-each(ps, function (p) {
+        _interpret-param(counter, p)
+      }))
+    in
+    Pair(format("({})", [intercalate(*", ", xs)]), concat(pss))
+  }
+}
+
+define _replace-or-fail(from: &text, to: text, haystack: &text): ?text {
+  let tmp = core.text.split-on(from, haystack) in
+  let len on tmp = length(tmp) in
+  if ge-int(len, 2) {
+    Right(core.text.intercalate(to, tmp))
+  } else {
+    none()
+  }
+}
+
+data preparation-error {
+| Unknown-Placeholder(text)
+}
+
+data prepared-command {
+| Prepared-Command(
+    template: text,
+    parameters: list(sql-param),
+  )
+}
+
+define _replace(
+  counter: &cell(int),
+  prepared-params: list(pair(oid, text)),
+  template: text,
+  ps: list(pair(&text, parameter)),
+): either(preparation-error, prepared-command) {
+  match ps {
+  | Nil =>
+    let result on template = core.text.append(template, "\0") in
+    let _ = template in
+    Right(Prepared-Command(result, prepared-params))
+  | Cons(Pair(from, param), rest) =>
+    let Pair(to, ps) = _interpret-param(counter, param) in
+    let new-template-or-none on template = _replace-or-fail(from, to, template) in
+    let _ = template in
+    let _ = param in
+    match new-template-or-none {
+    | Right(new-template) =>
+      _replace(
+        counter,
+        append(prepared-params, ps),
+        new-template,
+        rest,
+      )
+    | Left(_) =>
+      Left(Unknown-Placeholder(*from))
+    }
+  }
+}
+
+define _prepare(
+  template: &text,
+  parameters: list(pair(&text, parameter)),
+): either(preparation-error, prepared-command) {
+  let counter = new-cell(1) in
+  let result on counter = _replace(counter, [], *template, parameters) in
+  let _ = counter in
+  result
+}
