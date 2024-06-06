@@ -30,8 +30,8 @@ data connection-error {
 }
 
 nominal {
-  connection: tau,
-  _connection: tau,
+  connection: type,
+  _connection: type,
   connect(c: conninfo): either(connection-error, connection),
 }
 

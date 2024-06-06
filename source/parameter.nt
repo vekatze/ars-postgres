@@ -14,11 +14,11 @@ data parameter {
 | Tuple(list(parameter))
 }
 
-constant oid: tau {
+constant oid: type {
   int
 }
 
-constant sql-param: tau {
+constant sql-param: type {
   pair(oid, text)
 }
 

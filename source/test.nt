@@ -109,7 +109,3 @@ define main(): unit {
     printf("{}", [message])
   }
 }
-
-define zen(): unit {
-  main()
-}
