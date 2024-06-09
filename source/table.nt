@@ -10,7 +10,7 @@ foreign {
   PQgetvalue(pointer, int, int): pointer,
   PQfnumber(pointer, pointer): int,
   strtol(pointer, pointer, int): int,
-  strtod(pointer, pointer): int,
+  strtod(pointer, pointer): float,
 }
 
 data table {}
