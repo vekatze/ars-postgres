@@ -25,8 +25,8 @@
   },
   static {
     reset "source/sql/reset.sql",
-    insert-user "source/sql/user/insert.sql",
-    select-user "source/sql/user/select.sql",
+    insert-author "source/sql/author/insert.sql",
+    select-author "source/sql/author/select.sql",
   },
   dependency {
     core {

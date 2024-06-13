@@ -54,15 +54,15 @@ inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) 
 }
 
 inline encode-float(r: &table, row: int, column: int): either(encoder-error, float) {
-  let c-int-str: int = magic external PQgetvalue(r, row, column) in
+  let c-float-str: int = magic external PQgetvalue(r, row, column) in
   let end-ptr = magic alloca(int, 1) in
-  let float-val: float = magic external strtod(c-int-str, end-ptr) in
+  let float-val: float = magic external strtod(c-float-str, end-ptr) in
   let end-char-ptr = load-int(end-ptr) in
   let end-char = load-int8(end-char-ptr) in
   if eq-int8(end-char, 0) {
     Right(float-val)
   } else {
-    Left(Float-Parse-Error(row, column, _from-c-string(c-int-str)))
+    Left(Float-Parse-Error(row, column, _from-c-string(c-float-str)))
   }
 }
 
