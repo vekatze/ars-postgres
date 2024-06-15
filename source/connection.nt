@@ -40,12 +40,12 @@ resource _connection {
     magic external PQfinish(ptr)
   },
   function (ptr) {
-    let host = _from-c-string(magic external PQhost(ptr)) in
-    let port = _from-c-string(magic external PQport(ptr)) in
-    let dbname = _from-c-string(magic external PQdb(ptr)) in
-    let user = _from-c-string(magic external PQuser(ptr)) in
+    let !host = _from-c-string(magic external PQhost(ptr)) in
+    let !port = _from-c-string(magic external PQport(ptr)) in
+    let !dbname = _from-c-string(magic external PQdb(ptr)) in
+    let !user = _from-c-string(magic external PQuser(ptr)) in
     let password = _from-c-string(magic external PQpass(ptr)) in
-    let new-conn = connect(Conn-Info of {host, port, dbname, user, password}) in
+    let new-conn = connect(Conn-Info of {host = !host, port = !port, dbname = !dbname, user = !user, password}) in
     match new-conn {
     | Right(c) =>
       magic cast(connection, int, c)
@@ -53,7 +53,7 @@ resource _connection {
       let message =
         format(
           "failed to clone the following connection:\nhost={} port={} dbname={} user={} password=<hidden>\n",
-          [host, port, dbname, user],
+          [!host, !port, !dbname, !user],
         )
       in
       let unreachable on message = panic(message) in

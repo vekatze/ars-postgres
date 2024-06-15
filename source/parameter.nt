@@ -1,5 +1,4 @@
 import {
-  core.list {for-each},
   core.text {format, intercalate},
   this.foreign {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
   time.time {time, to-ISO8601-UTC},
@@ -89,7 +88,6 @@ define _replace(
     let Pair(to, ps) = _interpret-param(counter, param) in
     let new-template-or-none on template = _replace-or-fail(from, to, template) in
     let _ = template in
-    let _ = param in
     match new-template-or-none {
     | Right(new-template) =>
       _replace(

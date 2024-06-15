@@ -70,14 +70,14 @@ define select-author(limit: int): command(unit) {
 }
 
 define main(): unit {
-  let n = get-time() in
+  let !n = get-time() in
   let conn-or-none = connect(my-conn) in
   match conn-or-none {
   | Right(conn) =>
     let result on conn =
       with-transaction(conn, function () {
         try _ = batch(conn, include-text(reset)) in
-        try _ = execute(conn, insert-author("Virginia Woolf", 2.2, n)) in
+        try _ = execute(conn, insert-author("Virginia Woolf", 2.2, !n)) in
         try _ =
           execute(conn, insert-author(
             "Aristotle",
@@ -85,10 +85,10 @@ define main(): unit {
             time.time.Time of {seconds = -9999999, nanoseconds = 123456789},
           ))
         in
-        try _ = execute(conn, insert-author("李白", 3.38, n)) in
-        try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, n)) in
-        try _ = execute(conn, insert-author("宮沢賢治", 3333333.222, n)) in
-        try _ = execute(conn, insert-author("Stefan Zweig", -1234.56789, n)) in
+        try _ = execute(conn, insert-author("李白", 3.38, !n)) in
+        try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, !n)) in
+        try _ = execute(conn, insert-author("宮沢賢治", 3333333.222, !n)) in
+        try _ = execute(conn, insert-author("Stefan Zweig", -1234.56789, !n)) in
         execute(conn, select-author(20))
       })
     in
