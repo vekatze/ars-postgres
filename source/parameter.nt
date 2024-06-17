@@ -48,15 +48,15 @@ define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-
         _interpret-param(counter, p)
       }))
     in
-    Pair(format("({})", [intercalate(*", ", xs)]), concat(pss))
+    Pair(format("({})", [intercalate(xs, *", ")]), concat(pss))
   }
 }
 
-define _replace-or-fail(from: &text, to: text, haystack: &text): ?text {
-  let tmp = core.text.split-on(from, haystack) in
+define _replace-or-fail(haystack: &text, from: &text, to: text): ?text {
+  let tmp = core.text.split(haystack, from) in
   let len on tmp = length(tmp) in
   if ge-int(len, 2) {
-    Right(core.text.intercalate(to, tmp))
+    Right(core.text.intercalate(tmp, to))
   } else {
     none()
   }
@@ -86,7 +86,7 @@ define _replace(
     Right(Prepared-Command(result, prepared-params))
   | Cons(Pair(from, param), rest) =>
     let Pair(to, ps) = _interpret-param(counter, param) in
-    let new-template-or-none on template = _replace-or-fail(from, to, template) in
+    let new-template-or-none on template = _replace-or-fail(template, from, to) in
     let _ = template in
     match new-template-or-none {
     | Right(new-template) =>

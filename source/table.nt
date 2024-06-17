@@ -72,7 +72,7 @@ inline encode-text(r: &table, row: int, column: int): either(encoder-error, text
 
 inline encode-time(r: &table, row: int, column: int): either(encoder-error, time) {
   let date-text = _from-c-string(magic external PQgetvalue(r, row, column)) in
-  let date-text' on date-text = replace(" ", *"T", date-text) in
+  let date-text' on date-text = replace(date-text, " ", *"T") in
   let time-or-none on date-text' = from-ISO8601(date-text') in
   let _ = date-text' in
   match time-or-none {
