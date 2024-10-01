@@ -1,7 +1,9 @@
 import {
+  core.c-string {from-c-string},
   core.control {discard},
+  core.list {length},
   core.memory {store-int},
-  core.text {_from-c-string, _get-content-pointer},
+  core.text {_get-content-pointer},
   core.word,
   this.command {Command, command},
   this.connection {connection},
@@ -64,7 +66,7 @@ define batch(c: &connection, com: &text): either(error, unit) {
   if _command-completed-p(status) {
     Right(Unit)
   } else {
-    let error-message = _from-c-string(magic external PQresultErrorMessage(result)) in
+    let error-message = from-c-string(magic external PQresultErrorMessage(result)) in
     Left(Command-Error(status, error-message))
   }
 }
@@ -143,7 +145,7 @@ inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
       }
     } else {
       // ignore COPY commands for now
-      let error-message = _from-c-string(magic external PQresultErrorMessage(result)) in
+      let error-message = from-c-string(magic external PQresultErrorMessage(result)) in
       magic external PQclear(result);
       Left(Command-Error(status, error-message))
     }

@@ -1,5 +1,7 @@
 import {
-  core.text {_from-c-string, _get-content-pointer, format},
+  core.c-string {from-c-string},
+  core.system {panic},
+  core.text {_get-content-pointer, format},
   this.foreign {CONNECTION_OK},
 }
 
@@ -40,11 +42,11 @@ resource _connection {
     magic external PQfinish(ptr)
   },
   function (ptr) {
-    let !host = _from-c-string(magic external PQhost(ptr)) in
-    let !port = _from-c-string(magic external PQport(ptr)) in
-    let !dbname = _from-c-string(magic external PQdb(ptr)) in
-    let !user = _from-c-string(magic external PQuser(ptr)) in
-    let password = _from-c-string(magic external PQpass(ptr)) in
+    let !host = from-c-string(magic external PQhost(ptr)) in
+    let !port = from-c-string(magic external PQport(ptr)) in
+    let !dbname = from-c-string(magic external PQdb(ptr)) in
+    let !user = from-c-string(magic external PQuser(ptr)) in
+    let password = from-c-string(magic external PQpass(ptr)) in
     let new-conn = connect(Conn-Info of {host = !host, port = !port, dbname = !dbname, user = !user, password}) in
     match new-conn {
     | Right(c) =>
@@ -85,6 +87,6 @@ define connect(c: conninfo): either(connection-error, connection) {
     Right(conn)
   } else {
     let error-message = magic external PQerrorMessage(conn) in
-    Left(Connection-Error(_from-c-string(error-message)))
+    Left(Connection-Error(from-c-string(error-message)))
   }
 }

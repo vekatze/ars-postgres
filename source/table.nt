@@ -1,6 +1,7 @@
 import {
+  core.c-string {c-string, from-c-string},
   core.memory {load-int, load-int8},
-  core.text {_from-c-string, _get-content-pointer, replace},
+  core.text {_get-content-pointer, replace},
   time.time {from-ISO8601, time},
 }
 
@@ -40,7 +41,7 @@ define get-column-by-name(r: &table, column-name: &text): either(encoder-error, 
 }
 
 inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) {
-  let c-int-str: int = magic external PQgetvalue(r, row, column) in
+  let c-int-str: &c-string = magic external PQgetvalue(r, row, column) in
   let end-ptr = magic alloca(int, 1) in
   let base: int = 10 in
   let int-val: int = magic external strtol(c-int-str, end-ptr, base) in
@@ -49,12 +50,12 @@ inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) 
   if eq-int8(end-char, 0) {
     Right(int-val)
   } else {
-    Left(Int-Parse-Error(row, column, _from-c-string(c-int-str)))
+    Left(Int-Parse-Error(row, column, from-c-string(c-int-str)))
   }
 }
 
 inline encode-float(r: &table, row: int, column: int): either(encoder-error, float) {
-  let c-float-str: int = magic external PQgetvalue(r, row, column) in
+  let c-float-str: &c-string = magic external PQgetvalue(r, row, column) in
   let end-ptr = magic alloca(int, 1) in
   let float-val: float = magic external strtod(c-float-str, end-ptr) in
   let end-char-ptr = load-int(end-ptr) in
@@ -62,16 +63,16 @@ inline encode-float(r: &table, row: int, column: int): either(encoder-error, flo
   if eq-int8(end-char, 0) {
     Right(float-val)
   } else {
-    Left(Float-Parse-Error(row, column, _from-c-string(c-float-str)))
+    Left(Float-Parse-Error(row, column, from-c-string(c-float-str)))
   }
 }
 
 inline encode-text(r: &table, row: int, column: int): either(encoder-error, text) {
-  Right(_from-c-string(magic external PQgetvalue(r, row, column)))
+  Right(from-c-string(magic external PQgetvalue(r, row, column)))
 }
 
 inline encode-time(r: &table, row: int, column: int): either(encoder-error, time) {
-  let date-text = _from-c-string(magic external PQgetvalue(r, row, column)) in
+  let date-text = from-c-string(magic external PQgetvalue(r, row, column)) in
   let date-text' on date-text = replace(date-text, " ", *"T") in
   let time-or-none on date-text' = from-ISO8601(date-text') in
   let _ = date-text' in

@@ -1,5 +1,6 @@
 import {
   core.control {try-loop},
+  core.float.show {show-float},
   this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
   this.command {Command, command},
   this.connection {Conn-Info, Connection-Error, connect},
@@ -61,7 +62,7 @@ define select-author(limit: int): command(unit) {
           try name = encode-text(res, r, author-name-column) in
           try some-value = encode-float(res, r, author-value-column) in
           try created-at = encode-time(res, r, author-created-at-column) in
-          printf("{} {} {}\n", [name, %lf(some-value), to-ISO8601-local(created-at, 6)]);
+          printf("{} {} {}\n", [name, show-float(some-value), to-ISO8601-local(created-at, 6)]);
           Right(Unit)
         })
       }
