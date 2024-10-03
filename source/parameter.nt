@@ -1,4 +1,5 @@
 import {
+  core.c-string {c-string, to-c-string},
   core.cell {cell, mutate},
   core.float.show {show-float},
   core.int.show {show-int},
@@ -22,7 +23,7 @@ constant oid: type {
 }
 
 constant sql-param: type {
-  pair(oid, text)
+  pair(oid, c-string)
 }
 
 define _new-placeholder(counter: &cell(int)): text {
@@ -36,16 +37,22 @@ define _new-placeholder(counter: &cell(int)): text {
 define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-param)) {
   match p {
   | Integer(x) =>
-    Pair(_new-placeholder(counter), [Pair(INT8OID, format("{}\0", [show-int(x)]))])
+    // Pair(_new-placeholder(counter), [Pair(INT8OID, format("{}\0", [show-int(x)]))])
+    pin tmp = show-int(x) in
+    Pair(_new-placeholder(counter), [Pair(INT8OID, to-c-string(tmp))])
   | Float(x) =>
-    Pair(_new-placeholder(counter), [Pair(FLOAT8OID, format("{}\0", [show-float(x)]))])
+    pin tmp = show-float(x) in
+    Pair(_new-placeholder(counter), [Pair(FLOAT8OID, to-c-string(tmp))])
   | Text(x) =>
-    Pair(_new-placeholder(counter), [Pair(TEXTOID, format("{}\0", [x]))])
+    pin x = x in
+    Pair(_new-placeholder(counter), [Pair(TEXTOID, to-c-string(x))])
   | Time(x) =>
-    Pair(_new-placeholder(counter), [Pair(TIMEOID, format("{}\0", [x]))])
+    pin x = x in
+    Pair(_new-placeholder(counter), [Pair(TIMEOID, to-c-string(x))])
   | Timestamp(t) =>
-    let t = format("{}\0", [to-ISO8601-UTC(t, 6)]) in
-    Pair(_new-placeholder(counter), [Pair(TIMESTAMPTZOID, t)])
+    // let t = format("{}\0", [to-ISO8601-UTC(t, 6)]) in
+    pin tmp = to-ISO8601-UTC(t, 6) in
+    Pair(_new-placeholder(counter), [Pair(TIMESTAMPTZOID, to-c-string(tmp))])
   | Tuple(ps) =>
     let Pair(xs, pss) =
       unzip(for-each(ps, function (p) {
@@ -79,7 +86,7 @@ data prepared-command {
 
 define _replace(
   counter: &cell(int),
-  prepared-params: list(pair(oid, text)),
+  prepared-params: list(sql-param),
   template: text,
   ps: list(pair(&text, parameter)),
 ): either(preparation-error, prepared-command) {

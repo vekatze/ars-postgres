@@ -1,7 +1,8 @@
 import {
-  core.c-string {c-string, from-c-string},
+  core.c-string {c-string, from-c-string, to-c-string},
   core.memory {load-int, load-int8},
-  core.text {_get-content-pointer, replace},
+  core.pointer {_Pointer},
+  core.text {replace},
   time.time {from-ISO8601, time},
 }
 
@@ -32,7 +33,8 @@ data encoder-error {
 }
 
 define get-column-by-name(r: &table, column-name: &text): either(encoder-error, int) {
-  let result = magic external PQfnumber(r, _get-content-pointer(column-name)) in
+  pin c-column-name = to-c-string(column-name) in
+  let result = magic external PQfnumber(r, c-column-name) in
   if ge-int32(result, 0) {
     Right(zext-int32-int(result))
   } else {
@@ -42,10 +44,10 @@ define get-column-by-name(r: &table, column-name: &text): either(encoder-error, 
 
 inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) {
   let c-int-str: &c-string = magic external PQgetvalue(r, row, column) in
-  let end-ptr = magic alloca(int, 1) in
+  let end-ptr = _Pointer(magic alloca(int, 1)) in
   let base: int = 10 in
   let int-val: int = magic external strtol(c-int-str, end-ptr, base) in
-  let end-char-ptr = load-int(end-ptr) in
+  let end-char-ptr = _Pointer(load-int(end-ptr)) in
   let end-char = load-int8(end-char-ptr) in
   if eq-int8(end-char, 0) {
     Right(int-val)
@@ -56,9 +58,9 @@ inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) 
 
 inline encode-float(r: &table, row: int, column: int): either(encoder-error, float) {
   let c-float-str: &c-string = magic external PQgetvalue(r, row, column) in
-  let end-ptr = magic alloca(int, 1) in
+  let end-ptr = _Pointer(magic alloca(int, 1)) in
   let float-val: float = magic external strtod(c-float-str, end-ptr) in
-  let end-char-ptr = load-int(end-ptr) in
+  let end-char-ptr = _Pointer(load-int(end-ptr)) in
   let end-char = load-int8(end-char-ptr) in
   if eq-int8(end-char, 0) {
     Right(float-val)

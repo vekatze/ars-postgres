@@ -1,7 +1,7 @@
 import {
-  core.c-string {from-c-string},
+  core.c-string {from-c-string, to-c-string},
   core.system {panic},
-  core.text {_get-content-pointer, format},
+  core.text {format},
   this.foreign {CONNECTION_OK},
 }
 
@@ -71,8 +71,8 @@ data connection {
 
 define connect(c: conninfo): either(connection-error, connection) {
   let Conn-Info of {host, port, dbname, user, password} = c in
-  let conn-text =
-    format("host={} port={} dbname={} user={} password={}\0", [
+  pin conn-text =
+    format("host={} port={} dbname={} user={} password={}", [
       host,
       port,
       dbname,
@@ -80,7 +80,8 @@ define connect(c: conninfo): either(connection-error, connection) {
       password,
     ])
   in
-  let conn on conn-text = magic external PQconnectdb(_get-content-pointer(conn-text)) in
+  let conn-text = to-c-string(conn-text) in
+  let conn on conn-text = magic external PQconnectdb(conn-text) in
   let _ = conn-text in
   let status: int on conn = magic external PQstatus(conn) in
   if eq-int(status, CONNECTION_OK) {

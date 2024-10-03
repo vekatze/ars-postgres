@@ -1,9 +1,10 @@
 import {
-  core.c-string {from-c-string},
+  core.c-string {c-string, from-c-string, to-c-string},
   core.control {discard},
   core.list {length},
+  core.magic,
   core.memory {store-int},
-  core.text {_get-content-pointer},
+  core.pointer {_Pointer, pointer, shift},
   core.word,
   this.command {Command, command},
   this.connection {connection},
@@ -12,7 +13,7 @@ import {
     PGRES_COMMAND_OK,
     PGRES_TUPLES_OK,
   },
-  this.parameter {Prepared-Command, _prepare, preparation-error},
+  this.parameter {Prepared-Command, _prepare, preparation-error, sql-param},
   this.table {encoder-error, table},
 }
 
@@ -30,23 +31,23 @@ data error {
 | Encoder-Error(detail: encoder-error)
 }
 
-define _store-elems(elems: &list(pair(int, text)), ptr: int): unit {
+define _store-elems(elems: &list(sql-param), ptr: pointer): unit {
   case elems {
   | Nil =>
     Unit
   | Cons(Pair(_, x), xs) =>
-    store-int(_get-content-pointer(x), ptr);
-    _store-elems(xs, add-int(ptr, core.word.size))
+    store-int(core.magic.cast(&c-string, int, x), ptr);
+    _store-elems(xs, shift(ptr, core.word.size))
   }
 }
 
-define _store-oids(elems: &list(pair(int, text)), ptr: int): unit {
+define _store-oids(elems: &list(sql-param), ptr: pointer): unit {
   case elems {
   | Nil =>
     Unit
   | Cons(Pair(oid, _), xs) =>
     store-int(*oid, ptr);
-    _store-oids(xs, add-int(ptr, OID_SIZE))
+    _store-oids(xs, shift(ptr, OID_SIZE))
   }
 }
 
@@ -61,7 +62,8 @@ define _command-completed-p(status: int): bool {
 }
 
 define batch(c: &connection, com: &text): either(error, unit) {
-  let result: table = magic external PQexec(c, _get-content-pointer(com)) in
+  pin com = to-c-string(com) in
+  let result: table = magic external PQexec(c, com) in
   let status = magic external PQresultStatus(result) in
   if _command-completed-p(status) {
     Right(Unit)
@@ -102,17 +104,18 @@ constant zero: int {
 inline _exec-params(
   c: &connection,
   template: text,
-  parameters: list(pair(int, text)),
+  parameters: list(sql-param),
 ): &table {
   let num-of-params on parameters = length(parameters) in
-  let param-values = magic alloca(int, num-of-params) in
-  let param-types = magic alloca(int, num-of-params) in
+  let param-values = _Pointer(magic alloca(int, num-of-params)) in
+  let param-types = _Pointer(magic alloca(int, num-of-params)) in
   let _ on parameters = _store-elems(parameters, param-values) in
   let _ on parameters = _store-oids(parameters, param-types) in
   let result: table on template =
+    pin template = to-c-string(template) in
     magic external PQexecParams(
       c,
-      _get-content-pointer(template),
+      template,
       num-of-params,
       param-types,
       param-values,
