@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libpq-fe.h>
-#include <postgresql/server/catalog/pg_type_d.h>
+#include <catalog/pg_type_d.h>
 
 __attribute__((always_inline))
 int neut_ars_postgres_v0_1_CONNECTION_OK() {

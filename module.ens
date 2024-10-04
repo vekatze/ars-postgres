@@ -20,7 +20,7 @@
       "foreign.o",
     ],
     script [
-      "{{clang}} $(pkg-config libpq --libs --cflags) -c -flto=thin -O2 source/foreign.c -o {{foreign}}/foreign.o",
+      "{{clang}} -I$(pg_config --includedir) -I$(pg_config --includedir-server) -c -flto=thin -O2 source/foreign.c -o {{foreign}}/foreign.o",
     ],
   },
   static {
