@@ -37,9 +37,9 @@
       enable-preset true,
     },
     time {
-      digest "Q0JP4smYsrgwr0NzP6lVoE-f2R3Z6giU_KswWcT6zFE",
+      digest "j6QQrr_WtdYhKyyRHCw4ps4LLxgYyFI8lzNcexHgPbU",
       mirror [
-        "https://github.com/vekatze/time-nt/raw/main/archive/0-4-14.tar.zst",
+        "https://github.com/vekatze/time-nt/raw/main/archive/0-4-15.tar.zst",
       ],
     },
   },
