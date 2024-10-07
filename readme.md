@@ -14,8 +14,6 @@ neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0
 
 Install PostgreSQL and libpq:
 
-For example:
-
 ```sh
 # Debian
 apt install postgresql-server-dev-all
