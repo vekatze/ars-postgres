@@ -4,13 +4,11 @@
 
 ## Installation
 
-### Module
+Add this module to your project:
 
 ```sh
 neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-15.tar.zst
 ```
-
-### PostgreSQL and libpq
 
 Install libpq and pkg-config:
 
@@ -37,9 +35,11 @@ Ensure that the following command runs successfully:
 pkg-config libpq --libs --cflags
 ```
 
-Add the below to your app's `build-option`:
+Finally, edit your app's `build-option` into something like the following:
 
 ```ens
+{
+  // ...
   target {
     your-app {
       main "your-app.nt",
@@ -48,6 +48,8 @@ Add the below to your app's `build-option`:
       ],                                       //
     },
   },
+  // ...
+}
 ```
 
 ## Test
