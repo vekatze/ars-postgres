@@ -12,61 +12,42 @@ neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0
 
 ### PostgreSQL and libpq
 
-Install PostgreSQL and libpq:
+Install libpq and pkg-config:
 
 ```sh
 # Debian
-apt install postgresql-server-dev-all
+apt install libpq-dev pkg-config
 
 # Ubuntu
-apt install postgresql-server-dev-all
+apt install libpq-dev pkg-config
 
 # macOS
-brew install postgresql@17 libpq
-# (... then add /opt/homebrew/opt/postgresql@17/bin to your PATH)
-```
-
-Ensure that the following two commands run successfully:
-
-- `pg_config --includedir`
-- `pg_config --includedir-server`
-
-### pkg-config
-
-Install `pkg-config`:
-
-```sh
-# Debian
-apt install pkg-config
-
-# Ubuntu
-apt install pkg-config
-
-# macOS
-brew install pkg-config
-```
-
-Ensure that the following command runs successfully:
-
-- `pkg-config libpq --libs --cflags`
-
-Add the below to your app's `build-option`:
-
-```ens
-  target {
-    test {
-      main "test.nt",
-      build-option [                           //
-        "$(pkg-config libpq --libs --cflags)", // ← add this
-      ],                                       //
-    },
-  },
+brew install libpq pkg-config
 ```
 
 On macOS, set:
 
 ```sh
 export PKG_CONFIG_PATH=/opt/homebrew/opt/libpq/lib/pkgconfig:$PKG_CONFIG_PATH
+```
+
+Ensure that the following command runs successfully:
+
+```sh
+pkg-config libpq --libs --cflags
+```
+
+Add the below to your app's `build-option`:
+
+```ens
+  target {
+    your-app {
+      main "your-app.nt",
+      build-option [                           //
+        "$(pkg-config libpq --libs --cflags)", // ← add this
+      ],                                       //
+    },
+  },
 ```
 
 ## Test
