@@ -5,7 +5,7 @@ import {
   core.int.show {show-int},
   core.list {append, concat, for-each, length, unzip},
   core.text {format, intercalate},
-  this.foreign {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
+  this.constant {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
   time.time {time, to-ISO8601-UTC},
 }
 

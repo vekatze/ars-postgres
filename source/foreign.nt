@@ -9,11 +9,6 @@ foreign {
   neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR(): int,
   neut_ars_postgres_v0_1_PGRES_FATAL_ERROR(): int,
   neut_ars_postgres_v0_1_OID_SIZE(): int,
-  neut_ars_postgres_v0_1_INT8OID(): int,
-  neut_ars_postgres_v0_1_FLOAT8OID(): int,
-  neut_ars_postgres_v0_1_TEXTOID(): int,
-  neut_ars_postgres_v0_1_TIMEOID(): int,
-  neut_ars_postgres_v0_1_TIMESTAMPTZOID(): int,
 }
 
 constant CONNECTION_OK: int {
@@ -54,24 +49,4 @@ constant PGRES_FATAL_ERROR: int {
 
 constant OID_SIZE: int {
   magic external neut_ars_postgres_v0_1_OID_SIZE()
-}
-
-constant INT8OID: int {
-  magic external neut_ars_postgres_v0_1_INT8OID()
-}
-
-constant FLOAT8OID: int {
-  magic external neut_ars_postgres_v0_1_FLOAT8OID()
-}
-
-constant TEXTOID: int {
-  magic external neut_ars_postgres_v0_1_TEXTOID()
-}
-
-constant TIMEOID: int {
-  magic external neut_ars_postgres_v0_1_TIMEOID()
-}
-
-constant TIMESTAMPTZOID: int {
-  magic external neut_ars_postgres_v0_1_TIMESTAMPTZOID()
 }

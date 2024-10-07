@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <libpq-fe.h>
-#include <catalog/pg_type_d.h>
 
 __attribute__((always_inline))
 int neut_ars_postgres_v0_1_CONNECTION_OK() {
@@ -51,30 +50,4 @@ int neut_ars_postgres_v0_1_PGRES_FATAL_ERROR() {
 __attribute__((always_inline))
 int neut_ars_postgres_v0_1_OID_SIZE() {
   return sizeof(Oid);
-}
-
-
-__attribute__((always_inline))
-int neut_ars_postgres_v0_1_INT8OID() {
-  return INT8OID;
-}
-
-__attribute__((always_inline))
-int neut_ars_postgres_v0_1_FLOAT8OID() {
-  return FLOAT8OID;
-}
-
-__attribute__((always_inline))
-int neut_ars_postgres_v0_1_TEXTOID() {
-  return TEXTOID;
-}
-
-__attribute__((always_inline))
-int neut_ars_postgres_v0_1_TIMEOID() {
-  return TIMEOID;
-}
-
-__attribute__((always_inline))
-int neut_ars_postgres_v0_1_TIMESTAMPTZOID() {
-  return TIMESTAMPTZOID;
 }
