@@ -7,7 +7,7 @@
 ### Module
 
 ```sh
-neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-14.tar.zst
+neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-15.tar.zst
 ```
 
 ### PostgreSQL and libpq
