@@ -87,7 +87,8 @@ define connect(c: conninfo): either(connection-error, connection) {
   if eq-int(status, CONNECTION_OK) {
     Right(conn)
   } else {
-    let error-message = magic external PQerrorMessage(conn) in
-    Left(Connection-Error(from-c-string(error-message)))
+    let e on conn = Connection-Error(from-c-string(magic external PQerrorMessage(conn))) in
+    let _ = conn in
+    Left(e)
   }
 }
