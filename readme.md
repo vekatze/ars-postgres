@@ -161,7 +161,7 @@ create table if not exists user (
 )
 ```
 
-### Basic Flow
+### Basics
 
 The following code demonstrates a basic usage of `ars-postgres`:
 
