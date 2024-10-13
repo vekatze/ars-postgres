@@ -1,6 +1,6 @@
 import {
-  core.control {try-loop},
   core.float.show {show-float},
+  core.list {try-iterate},
   this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
   this.command {Command, command},
   this.connection {Conn-Info, Connection-Error, connect},
@@ -43,7 +43,15 @@ define insert-author(name: &text, some-value: float, now: time): command(unit) {
   }
 }
 
-define select-author(limit: int): command(unit) {
+data author {
+| Author(
+    name: text,
+    value: float,
+    created-at: time,
+  )
+}
+
+define select-author(limit: int): command(list(author)) {
   Command of {
     template = include-text(select-author),
     parameters = {
@@ -58,15 +66,24 @@ define select-author(limit: int): command(unit) {
         try author-name-column = get-column-by-name(res, "name") in
         try author-value-column = get-column-by-name(res, "some_value") in
         try author-created-at-column = get-column-by-name(res, "created_at") in
-        try-loop(row-size, function (r) {
+        try-iterate(row-size, function (r) {
           try name = encode-text(res, r, author-name-column) in
-          try some-value = encode-float(res, r, author-value-column) in
+          try value = encode-float(res, r, author-value-column) in
           try created-at = encode-time(res, r, author-created-at-column) in
-          printf("{} {} {}\n", [name, show-float(some-value), to-ISO8601-local(created-at, 6)]);
-          Right(Unit)
+          Right(Author(name, value, created-at))
         })
       }
     },
+  }
+}
+
+define _print-authors(xs: list(author)): unit {
+  match xs {
+  | Nil =>
+    Unit
+  | Cons(Author(name, value, created-at), rest) =>
+    printf("{} {} {}\n", [name, show-float(value), to-ISO8601-local(created-at, 6)]);
+    _print-authors(rest)
   }
 }
 
@@ -95,7 +112,8 @@ define main(): unit {
     in
     let _ = conn in
     match result {
-    | Right(_) =>
+    | Right(authors) =>
+      _print-authors(authors);
       print("success!\n")
     | Left(e) =>
       match e {
