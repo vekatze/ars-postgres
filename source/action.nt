@@ -66,9 +66,11 @@ define batch(c: &connection, com: &text): either(error, unit) {
   let result: table = magic external PQexec(c, com) in
   let status = magic external PQresultStatus(result) in
   if _command-completed-p(status) {
+    magic external PQclear(result);
     Right(Unit)
   } else {
     let error-message = from-c-string(magic external PQresultErrorMessage(result)) in
+    magic external PQclear(result);
     Left(Command-Error(status, error-message))
   }
 }
