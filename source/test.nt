@@ -1,6 +1,6 @@
 import {
   core.float.show {show-float},
-  core.list {try-iterate},
+  core.list {iterate-maybe},
   this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
   this.command {Command, command},
   this.connection {Conn-Info, Connection-Error, connect},
@@ -66,7 +66,7 @@ define select-author(limit: int): command(list(author)) {
         try author-name-column = get-column-by-name(res, "name") in
         try author-value-column = get-column-by-name(res, "some_value") in
         try author-created-at-column = get-column-by-name(res, "created_at") in
-        try-iterate(row-size, function (r) {
+        iterate-maybe(row-size, function (r) {
           try name = encode-text(res, r, author-name-column) in
           try value = encode-float(res, r, author-value-column) in
           try created-at = encode-time(res, r, author-created-at-column) in
