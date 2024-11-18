@@ -1,13 +1,13 @@
 import {
-  core.c-string {c-string, from-c-string, to-c-string},
+  core.c-string {c-string, to-c-string},
   core.control {discard},
   core.list {length},
   core.magic,
   core.memory {store-int},
-  core.pointer {_Pointer, pointer, shift},
+  core.pointer {null-pointer, shift},
   core.word,
   this.command {Command, command},
-  this.connection {connection},
+  this.connection {_from-c-string-pointer, connection},
   this.foreign {
     OID_SIZE,
     PGRES_COMMAND_OK,
@@ -63,14 +63,19 @@ define _command-completed-p(status: int): bool {
 
 define batch(c: &connection, com: &text): either(error, unit) {
   pin com = to-c-string(com) in
-  let result: table = magic external PQexec(c, com) in
+  let result =
+    magic external PQexec(
+      magic cast(&connection, pointer, c),
+      magic cast(&c-string, pointer, com),
+    )
+  in
   let status = magic external PQresultStatus(result) in
   if _command-completed-p(status) {
-    magic external PQclear(result);
+    let _ = magic external PQclear(result) in
     Right(Unit)
   } else {
-    let error-message = from-c-string(magic external PQresultErrorMessage(result)) in
-    magic external PQclear(result);
+    let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result)) in
+    let _ = magic external PQclear(result) in
     Left(Command-Error(status, error-message))
   }
 }
@@ -107,28 +112,28 @@ inline _exec-params(
   c: &connection,
   template: text,
   parameters: list(sql-param),
-): &table {
+): pointer {
   let num-of-params on parameters = length(parameters) in
-  let param-values = _Pointer(magic alloca(int, num-of-params)) in
-  let param-types = _Pointer(magic alloca(int, num-of-params)) in
+  let param-values = magic alloca(int, num-of-params) in
+  let param-types = magic alloca(int, num-of-params) in
   let _ on parameters = _store-elems(parameters, param-values) in
   let _ on parameters = _store-oids(parameters, param-types) in
-  let result: table on template =
+  let result: pointer on template =
     pin template = to-c-string(template) in
     magic external PQexecParams(
-      c,
-      template,
+      magic cast(&connection, pointer, c),
+      magic cast(&c-string, pointer, template),
       num-of-params,
       param-types,
       param-values,
-      zero,
-      zero,
+      null-pointer,
+      null-pointer,
       zero,
     )
   in
   discard(parameters);
-  let _ = template in
-  magic cast(table, &table, result)
+  discard(template);
+  result
 }
 
 inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
@@ -140,8 +145,8 @@ inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
     let result = _exec-params(conn, template, parameters) in
     let status = magic external PQresultStatus(result) in
     if _command-completed-p(status) {
-      let encoded-result = result-encoder(result) in
-      magic external PQclear(result);
+      let encoded-result = result-encoder(magic cast(pointer, &table, result)) in
+      let _ = magic external PQclear(result) in
       match encoded-result {
       | Right(v) =>
         Right(v)
@@ -150,8 +155,8 @@ inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
       }
     } else {
       // ignore COPY commands for now
-      let error-message = from-c-string(magic external PQresultErrorMessage(result)) in
-      magic external PQclear(result);
+      let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result)) in
+      let _ = magic external PQclear(result) in
       Left(Command-Error(status, error-message))
     }
   }

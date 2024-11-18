@@ -1,5 +1,5 @@
 import {
-  core.c-string {from-c-string, to-c-string},
+  core.c-string {c-string, from-c-string, to-c-string},
   core.system {panic},
   core.text {format},
   this.foreign {CONNECTION_OK},
@@ -8,7 +8,7 @@ import {
 foreign {
   PQconnectdb(pointer): pointer,
   PQstatus(pointer): int,
-  PQfinish(pointer): int,
+  PQfinish(pointer): void,
   PQhost(pointer): pointer,
   PQport(pointer): pointer,
   PQdb(pointer): pointer,
@@ -37,16 +37,23 @@ nominal {
   connect(c: conninfo): either(connection-error, connection),
 }
 
+inline _from-c-string-pointer(p: pointer): text {
+  from-c-string(magic cast(pointer, &c-string, p))
+}
+
 resource _connection {
-  function (ptr) {
-    magic external PQfinish(ptr)
+  function (ptr: int) {
+    let ptr = magic cast(int, pointer, ptr) in
+    let _ = magic external PQfinish(ptr) in
+    0
   },
-  function (ptr) {
-    let !host = from-c-string(magic external PQhost(ptr)) in
-    let !port = from-c-string(magic external PQport(ptr)) in
-    let !dbname = from-c-string(magic external PQdb(ptr)) in
-    let !user = from-c-string(magic external PQuser(ptr)) in
-    let password = from-c-string(magic external PQpass(ptr)) in
+  function (ptr: int) {
+    let ptr = magic cast(int, pointer, ptr) in
+    let !host = _from-c-string-pointer(magic external PQhost(ptr)) in
+    let !port = _from-c-string-pointer(magic external PQport(ptr)) in
+    let !dbname = _from-c-string-pointer(magic external PQdb(ptr)) in
+    let !user = _from-c-string-pointer(magic external PQuser(ptr)) in
+    let password = _from-c-string-pointer(magic external PQpass(ptr)) in
     let new-conn = connect(Conn-Info of {host = !host, port = !port, dbname = !dbname, user = !user, password}) in
     match new-conn {
     | Right(c) =>
@@ -81,13 +88,18 @@ define connect(c: conninfo): either(connection-error, connection) {
     ])
   in
   let conn-text = to-c-string(conn-text) in
-  let conn on conn-text = magic external PQconnectdb(conn-text) in
+  let conn on conn-text = magic external PQconnectdb(magic cast(&c-string, pointer, conn-text)) in
   let _ = conn-text in
-  let status: int on conn = magic external PQstatus(conn) in
+  let conn = magic cast(pointer, connection, conn) in
+  let status: int on conn = magic external PQstatus(magic cast(&connection, pointer, conn)) in
   if eq-int(status, CONNECTION_OK) {
     Right(conn)
   } else {
-    let e on conn = Connection-Error(from-c-string(magic external PQerrorMessage(conn))) in
+    let e on conn =
+      Connection-Error(_from-c-string-pointer(magic external PQerrorMessage(
+        magic cast(&connection, pointer, conn),
+      )))
+    in
     let _ = conn in
     Left(e)
   }
