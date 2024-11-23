@@ -61,7 +61,7 @@ inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) 
     magic external strtol(
       magic cast(&c-string, pointer, c-int-str),
       end-ptr,
-      C-Int(10),
+      10,
     )
   in
   let end-char-ptr = load-pointer(end-ptr) in
