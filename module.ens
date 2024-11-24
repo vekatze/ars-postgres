@@ -4,6 +4,8 @@
       main "test.nt",
       build-option [
         "$(pkg-config libpq --libs --cflags)",
+        // (AddressSanitizer reports memory leaks in libpq)
+        "-fsanitize=address",
       ],
     },
   },
@@ -30,16 +32,16 @@
   },
   dependency {
     core {
-      digest "oG2BshtL5GL_wPIoM0QU_nWeJ8Sm0LHAyt8Nfo2jO0M",
+      digest "D2GAOKIzIcXb0dBdev6RHCZMzhzfhu6LCQpCqfr5ItQ",
       mirror [
-        "https://github.com/vekatze/neut-core/raw/main/archive/0-50-34.tar.zst",
+        "https://github.com/vekatze/neut-core/raw/main/archive/0-50-35.tar.zst",
       ],
       enable-preset true,
     },
     time {
-      digest "TG1hExH_6zOD51UvwO7BO0OiHxEbOoPdmfMrVnLiJws",
+      digest "bd9hBwAFVlwDHyFFWcsZIWnDsAU_3q-1lvEIcSUnT1g",
       mirror [
-        "https://github.com/vekatze/time-nt/raw/main/archive/0-4-20.tar.zst",
+        "https://github.com/vekatze/time-nt/raw/main/archive/0-4-22.tar.zst",
       ],
     },
   },
