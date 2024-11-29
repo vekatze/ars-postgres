@@ -1,19 +1,19 @@
-constant INT8OID: int {
+inline INT8OID: int {
   20
 }
 
-constant TEXTOID: int {
+inline TEXTOID: int {
   25
 }
 
-constant FLOAT8OID: int {
+inline FLOAT8OID: int {
   701
 }
 
-constant TIMEOID: int {
+inline TIMEOID: int {
   1083
 }
 
-constant TIMESTAMPTZOID: int {
+inline TIMESTAMPTZOID: int {
   1184
 }

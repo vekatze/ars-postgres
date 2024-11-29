@@ -104,7 +104,7 @@ define with-transaction<a>(c: &connection, action: () -> either(error, a)): eith
   }
 }
 
-constant zero: int {
+inline zero: int {
   0
 }
 

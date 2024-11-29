@@ -14,7 +14,7 @@ import {
   },
 }
 
-constant my-conn: this.connection.conninfo {
+define get-conninfo(): this.connection.conninfo {
   Conn-Info of {
     host = *"127.0.0.1",
     port = *"5432",
@@ -89,7 +89,7 @@ define _print-authors(xs: list(author)): unit {
 
 define main(): unit {
   let !n = get-time() in
-  let conn-or-none = connect(my-conn) in
+  let conn-or-none = connect(get-conninfo()) in
   match conn-or-none {
   | Right(conn) =>
     let result on conn =

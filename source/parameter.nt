@@ -18,11 +18,11 @@ data parameter {
 | Tuple(list(parameter))
 }
 
-constant oid: type {
+inline oid: type {
   int
 }
 
-constant sql-param: type {
+inline sql-param: type {
   pair(oid, c-string)
 }
 
@@ -67,7 +67,7 @@ define _replace-or-fail(haystack: &text, from: &text, to: text): ?text {
   if ge-int(len, 2) {
     Right(core.text.intercalate(tmp, to))
   } else {
-    none()
+    none
   }
 }
 

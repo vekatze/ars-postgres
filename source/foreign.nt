@@ -11,42 +11,62 @@ foreign {
   neut_ars_postgres_v0_1_OID_SIZE(): int,
 }
 
-constant CONNECTION_OK: int {
-  magic external neut_ars_postgres_v0_1_CONNECTION_OK()
+inline CONNECTION_OK: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_CONNECTION_OK()
+  }
 }
 
-constant PGRES_EMPTY_QUERY: int {
-  magic external neut_ars_postgres_v0_1_PGRES_EMPTY_QUERY()
+inline PGRES_EMPTY_QUERY: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_EMPTY_QUERY()
+  }
 }
 
-constant PGRES_TUPLES_OK: int {
-  magic external neut_ars_postgres_v0_1_PGRES_TUPLES_OK()
+inline PGRES_TUPLES_OK: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_TUPLES_OK()
+  }
 }
 
-constant PGRES_COMMAND_OK: int {
-  magic external neut_ars_postgres_v0_1_PGRES_COMMAND_OK()
+inline PGRES_COMMAND_OK: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_COMMAND_OK()
+  }
 }
 
-constant PGRES_COPY_OUT: int {
-  magic external neut_ars_postgres_v0_1_PGRES_COPY_OUT()
+inline PGRES_COPY_OUT: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_COPY_OUT()
+  }
 }
 
-constant PGRES_COPY_IN: int {
-  magic external neut_ars_postgres_v0_1_PGRES_COPY_IN()
+inline PGRES_COPY_IN: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_COPY_IN()
+  }
 }
 
-constant PGRES_BAD_RESPONSE: int {
-  magic external neut_ars_postgres_v0_1_PGRES_BAD_RESPONSE()
+inline PGRES_BAD_RESPONSE: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_BAD_RESPONSE()
+  }
 }
 
-constant PGRES_NONFATAL_ERROR: int {
-  magic external neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR()
+inline PGRES_NONFATAL_ERROR: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR()
+  }
 }
 
-constant PGRES_FATAL_ERROR: int {
-  magic external neut_ars_postgres_v0_1_PGRES_FATAL_ERROR()
+inline PGRES_FATAL_ERROR: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_PGRES_FATAL_ERROR()
+  }
 }
 
-constant OID_SIZE: int {
-  magic external neut_ars_postgres_v0_1_OID_SIZE()
+inline OID_SIZE: int {
+  magic opaque-value {
+    magic external neut_ars_postgres_v0_1_OID_SIZE()
+  }
 }
