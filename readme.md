@@ -33,7 +33,7 @@ pkg-config libpq --libs --cflags
 Add `ars-postgres` to your project:
 
 ```sh
-neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-25.tar.zst
+neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-26.tar.zst
 ```
 
 ### Configure Your Project
@@ -84,17 +84,17 @@ data conninfo {
 // Establishes a connection to a DB.
 // A connection is closed when the corresponding variable is not used.
 // A connection is copied when the corresponding variable is used more than once.
-define connect(c: conninfo): either(connection-error, connection)
+define connect(c: conninfo): except(connection-error, connection)
 
 // Executes a parameterized SQL command.
-inline execute<a>(conn: &connection, com: command(a)): either(error, a)
+inline execute<a>(conn: &connection, com: command(a)): except(error, a)
 
 // Executes a raw SQL command.
-define batch(c: &connection, com: &text): either(error, unit)
+define batch(c: &connection, com: &text): except(error, unit)
 
 // Executes the given action in a `begin ... commit`.
 // `rollback` is executed instead of `commit` if `action` results in an error,
-define with-transaction<a>(c: &connection, action: () -> either(error, a)): either(error, a)
+define with-transaction<a>(c: &connection, action: () -> except(error, a)): except(error, a)
 ```
 
 ### Command
@@ -106,7 +106,7 @@ data command(a) {
 | Command(
     template: &text,
     parameters: list(pair(&text, parameter)),
-    result-encoder: (&table) -> either(encoder-error, a),
+    result-encoder: (&table) -> except(encoder-error, a),
   )
 }
 
@@ -134,19 +134,19 @@ define get-column-size(r: &table): int
 define get-row-size(r: &table): int
 
 // Gets the column number from a table by specifying column name.
-define get-column-by-name(r: &table, column-name: &text): either(encoder-error, int)
+define get-column-by-name(r: &table, column-name: &text): except(encoder-error, int)
 
 // Reads the value at (row, column) in the given table as an integer.
-inline encode-int(r: &table, row: int, column: int): either(encoder-error, int)
+inline encode-int(r: &table, row: int, column: int): except(encoder-error, int)
 
 // Reads the value at (row, column) in the given table as a float.
-inline encode-float(r: &table, row: int, column: int): either(encoder-error, float)
+inline encode-float(r: &table, row: int, column: int): except(encoder-error, float)
 
 // Reads the value at (row, column) in the given table as a text.
-inline encode-text(r: &table, row: int, column: int): either(encoder-error, text)
+inline encode-text(r: &table, row: int, column: int): except(encoder-error, text)
 
 // Reads the value at (row, column) in the given table as a ISO8601 time.
-inline encode-time(r: &table, row: int, column: int): either(encoder-error, time)
+inline encode-time(r: &table, row: int, column: int): except(encoder-error, time)
 ```
 
 ## Example
@@ -170,9 +170,9 @@ define connect-then-insert-then-select(): unit {
   // Establishes a DB connection
   let conn-or-none = connect(my-conn) in
   match conn-or-none {
-  | Left(Connection-Error(message)) =>
+  | Error(Connection-Error(message)) =>
     printf("{}", [message])
-  | Right(conn) =>
+  | OK(conn) =>
     let result on conn =
       with-transaction(conn, function () {
         // Executes SQL commands using a connection
@@ -183,10 +183,10 @@ define connect-then-insert-then-select(): unit {
     in
     // (conn is closed here because it is discarded here)
     match result {
-    | Right(user-list) =>
+    | OK(user-list) =>
       // use `user-list: list(user)` as you like
       print("success\n")
-    | Left(e) =>
+    | Error(e) =>
       // use `e` to report an error
       print("error\n")
     }
@@ -222,7 +222,7 @@ define insert-user(name: &text, now: time): command(unit) {
     // The response is ignored in this time since we're just inserting values.
     result-encoder = {
       function (_: &table) {
-        Right(Unit)
+        OK(Unit)
       }
     },
   }
@@ -270,7 +270,7 @@ define select-user(limit: int): command(list(user)) {
         try-iterate(row-size, function (r) {
           try name = encode-text(res, r, user-name-column) in
           try created-at = encode-time(res, r, user-created-at-column) in
-          Right(User(name, created-at))
+          OK(User(name, created-at))
         })
       }
     },
