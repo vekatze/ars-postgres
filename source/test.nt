@@ -1,6 +1,6 @@
 import {
   core.float.show {show-float},
-  core.list {iterate-maybe},
+  core.list {iterate-E},
   this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
   this.command {Command, command},
   this.connection {Conn-Info, Connection-Error, connect},
@@ -37,7 +37,7 @@ define insert-author(name: &text, some-value: float, now: time): command(unit) {
     },
     result-encoder = {
       function (_: &table) {
-        Right(Unit)
+        OK(Unit)
       }
     },
   }
@@ -66,11 +66,11 @@ define select-author(limit: int): command(list(author)) {
         try author-name-column = get-column-by-name(res, "name") in
         try author-value-column = get-column-by-name(res, "some_value") in
         try author-created-at-column = get-column-by-name(res, "created_at") in
-        iterate-maybe(row-size, function (r) {
+        iterate-E(row-size, function (r) {
           try name = encode-text(res, r, author-name-column) in
           try value = encode-float(res, r, author-value-column) in
           try created-at = encode-time(res, r, author-created-at-column) in
-          Right(Author(name, value, created-at))
+          OK(Author(name, value, created-at))
         })
       }
     },
@@ -91,7 +91,7 @@ define main(): unit {
   let !n = get-time() in
   let conn-or-none = connect(get-conninfo()) in
   match conn-or-none {
-  | Right(conn) =>
+  | OK(conn) =>
     let result on conn =
       with-transaction(conn, function () {
         try _ = batch(conn, include-text(reset)) in
@@ -112,10 +112,10 @@ define main(): unit {
     in
     let _ = conn in
     match result {
-    | Right(authors) =>
+    | OK(authors) =>
       _print-authors(authors);
       print("success!\n")
-    | Left(e) =>
+    | Error(e) =>
       match e {
       | Command-Error(_, message) =>
         printf("command-error:\n{}\n", [message])
@@ -128,7 +128,7 @@ define main(): unit {
         }
       }
     }
-  | Left(Connection-Error(message)) =>
+  | Error(Connection-Error(message)) =>
     printf("{}", [message])
   }
 }

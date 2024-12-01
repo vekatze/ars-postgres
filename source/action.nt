@@ -61,7 +61,7 @@ define _command-completed-p(status: int): bool {
   }
 }
 
-define batch(c: &connection, com: &text): either(error, unit) {
+define batch(c: &connection, com: &text): except(error, unit) {
   pin com = to-c-string(com) in
   let result =
     magic external PQexec(
@@ -72,35 +72,35 @@ define batch(c: &connection, com: &text): either(error, unit) {
   let status = magic external PQresultStatus(result) in
   if _command-completed-p(status) {
     let _ = magic external PQclear(result) in
-    Right(Unit)
+    OK(Unit)
   } else {
     let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result)) in
     let _ = magic external PQclear(result) in
-    Left(Command-Error(status, error-message))
+    Error(Command-Error(status, error-message))
   }
 }
 
-define begin(c: &connection): either(error, unit) {
+define begin(c: &connection): except(error, unit) {
   batch(c, "begin")
 }
 
-define commit(c: &connection): either(error, unit) {
+define commit(c: &connection): except(error, unit) {
   batch(c, "commit")
 }
 
-define rollback(c: &connection): either(error, unit) {
+define rollback(c: &connection): except(error, unit) {
   batch(c, "rollback")
 }
 
-define with-transaction<a>(c: &connection, action: () -> either(error, a)): either(error, a) {
+define with-transaction<a>(c: &connection, action: () -> except(error, a)): except(error, a) {
   try _ = begin(c) in
   match action() {
-  | Right(result) =>
+  | OK(result) =>
     try _ = commit(c) in
-    Right(result)
-  | Left(e) =>
+    OK(result)
+  | Error(e) =>
     try _ = rollback(c) in
-    Left(e)
+    Error(e)
   }
 }
 
@@ -136,28 +136,28 @@ inline _exec-params(
   result
 }
 
-inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
+inline execute<a>(conn: &connection, com: command(a)): except(error, a) {
   let Command of {template, parameters, result-encoder} = com in
   match _prepare(template, parameters) {
-  | Left(e) =>
-    Left(Preparation-Error(e))
-  | Right(Prepared-Command(template, parameters)) =>
+  | Error(e) =>
+    Error(Preparation-Error(e))
+  | OK(Prepared-Command(template, parameters)) =>
     let result = _exec-params(conn, template, parameters) in
     let status = magic external PQresultStatus(result) in
     if _command-completed-p(status) {
       let encoded-result = result-encoder(magic cast(pointer, &table, result)) in
       let _ = magic external PQclear(result) in
       match encoded-result {
-      | Right(v) =>
-        Right(v)
-      | Left(e) =>
-        Left(Encoder-Error(e))
+      | OK(v) =>
+        OK(v)
+      | Error(e) =>
+        Error(Encoder-Error(e))
       }
     } else {
       // ignore COPY commands for now
       let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result)) in
       let _ = magic external PQclear(result) in
-      Left(Command-Error(status, error-message))
+      Error(Command-Error(status, error-message))
     }
   }
 }
