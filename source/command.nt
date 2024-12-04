@@ -7,12 +7,12 @@ data command(a) {
 | Command(
     template: &text,
     parameters: list(pair(&text, parameter)),
-    result-encoder: (&table) -> except(encoder-error, a),
+    result-encoder: (&table) -> either(encoder-error, a),
   )
 }
 
-define void-encoder(_: &table): except(encoder-error, unit) {
-  OK(Unit)
+define void-encoder(_: &table): either(encoder-error, unit) {
+  Right(Unit)
 }
 
 define statement(t: &text): command(unit) {

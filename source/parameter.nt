@@ -65,7 +65,7 @@ define _replace-or-fail(haystack: &text, from: &text, to: text): ?text {
   let tmp = core.text.split(haystack, from) in
   let len on tmp = length(tmp) in
   if ge-int(len, 2) {
-    OK(core.text.intercalate(tmp, to))
+    Right(core.text.intercalate(tmp, to))
   } else {
     none
   }
@@ -87,26 +87,26 @@ define _replace(
   prepared-params: list(sql-param),
   template: text,
   ps: list(pair(&text, parameter)),
-): except(preparation-error, prepared-command) {
+): either(preparation-error, prepared-command) {
   match ps {
   | Nil =>
     let result on template = core.text.append(template, "\0") in
     let _ = template in
-    OK(Prepared-Command(result, prepared-params))
+    Right(Prepared-Command(result, prepared-params))
   | Cons(Pair(from, param), rest) =>
     let Pair(to, ps) = _interpret-param(counter, param) in
     let new-template-or-none on template = _replace-or-fail(template, from, to) in
     let _ = template in
     match new-template-or-none {
-    | OK(new-template) =>
+    | Right(new-template) =>
       _replace(
         counter,
         append(prepared-params, ps),
         new-template,
         rest,
       )
-    | Error(_) =>
-      Error(Unknown-Placeholder(*from))
+    | Left(_) =>
+      Left(Unknown-Placeholder(*from))
     }
   }
 }
@@ -114,7 +114,7 @@ define _replace(
 define _prepare(
   template: &text,
   parameters: list(pair(&text, parameter)),
-): except(preparation-error, prepared-command) {
+): either(preparation-error, prepared-command) {
   let counter = new-cell(1) in
   let result on counter = _replace(counter, [], *template, parameters) in
   let _ = counter in

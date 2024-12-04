@@ -34,7 +34,7 @@ data connection-error {
 nominal {
   connection: type,
   _connection: type,
-  connect(c: conninfo): except(connection-error, connection),
+  connect(c: conninfo): either(connection-error, connection),
 }
 
 inline _from-c-string-pointer(p: pointer): text {
@@ -56,9 +56,9 @@ resource _connection {
     let password = _from-c-string-pointer(magic external PQpass(ptr)) in
     let new-conn = connect(Conn-Info of {host = !host, port = !port, dbname = !dbname, user = !user, password}) in
     match new-conn {
-    | OK(c) =>
+    | Right(c) =>
       magic cast(connection, int, c)
-    | Error(_) =>
+    | Left(_) =>
       pin message =
         format(
           "failed to clone the following connection:\nhost={} port={} dbname={} user={} password=<hidden>\n",
@@ -74,7 +74,7 @@ data connection {
 | _Connection(_connection)
 }
 
-define connect(c: conninfo): except(connection-error, connection) {
+define connect(c: conninfo): either(connection-error, connection) {
   let Conn-Info of {host, port, dbname, user, password} = c in
   pin conn-text =
     format("host={} port={} dbname={} user={} password={}", [
@@ -91,7 +91,7 @@ define connect(c: conninfo): except(connection-error, connection) {
   let conn = magic cast(pointer, connection, conn) in
   let status: int on conn = magic external PQstatus(magic cast(&connection, pointer, conn)) in
   if eq-int(status, CONNECTION_OK) {
-    OK(conn)
+    Right(conn)
   } else {
     let e on conn =
       Connection-Error(_from-c-string-pointer(magic external PQerrorMessage(
@@ -99,6 +99,6 @@ define connect(c: conninfo): except(connection-error, connection) {
       )))
     in
     let _ = conn in
-    Error(e)
+    Left(e)
   }
 }

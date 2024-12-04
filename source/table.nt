@@ -37,7 +37,7 @@ inline _to-c-int(x: int): c-int {
   C-Int(x)
 }
 
-define get-column-by-name(r: &table, column-name: &text): except(encoder-error, int) {
+define get-column-by-name(r: &table, column-name: &text): either(encoder-error, int) {
   pin c-column-name = to-c-string(column-name) in
   let result =
     magic external PQfnumber(
@@ -47,13 +47,13 @@ define get-column-by-name(r: &table, column-name: &text): except(encoder-error, 
   in
   let result = from-c-int(result) in
   if ge-int(result, 0) {
-    OK(result)
+    Right(result)
   } else {
-    Error(Unknown-Column(*column-name))
+    Left(Unknown-Column(*column-name))
   }
 }
 
-inline encode-int(r: &table, row: int, column: int): except(encoder-error, int) {
+inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) {
   let r' = magic cast(&table, pointer, r) in
   let c-int-str = magic cast(pointer, &c-string, magic external PQgetvalue(r', _to-c-int(row), _to-c-int(column))) in
   let end-ptr = magic alloca(int, 1) in
@@ -67,13 +67,13 @@ inline encode-int(r: &table, row: int, column: int): except(encoder-error, int) 
   let end-char-ptr = load-pointer(end-ptr) in
   let end-char = load-int8(end-char-ptr) in
   if eq-int8(end-char, 0) {
-    OK(int-val)
+    Right(int-val)
   } else {
-    Error(Int-Parse-Error(row, column, from-c-string(c-int-str)))
+    Left(Int-Parse-Error(row, column, from-c-string(c-int-str)))
   }
 }
 
-inline encode-float(r: &table, row: int, column: int): except(encoder-error, float) {
+inline encode-float(r: &table, row: int, column: int): either(encoder-error, float) {
   let c-float-str =
     magic external PQgetvalue(
       magic cast(&table, pointer, r),
@@ -86,20 +86,20 @@ inline encode-float(r: &table, row: int, column: int): except(encoder-error, flo
   let end-char-ptr = load-pointer(end-ptr) in
   let end-char = load-int8(end-char-ptr) in
   if eq-int8(end-char, 0) {
-    OK(float-val)
+    Right(float-val)
   } else {
-    Error(Float-Parse-Error(row, column, from-c-string(magic cast(pointer, &c-string, c-float-str))))
+    Left(Float-Parse-Error(row, column, from-c-string(magic cast(pointer, &c-string, c-float-str))))
   }
 }
 
-inline encode-text(r: &table, row: int, column: int): except(encoder-error, text) {
+inline encode-text(r: &table, row: int, column: int): either(encoder-error, text) {
   let r = magic cast(&table, pointer, r) in
   let row = _to-c-int(row) in
   let column = _to-c-int(column) in
-  OK(from-c-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row, column))))
+  Right(from-c-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row, column))))
 }
 
-inline encode-time(r: &table, row: int, column: int): except(encoder-error, time) {
+inline encode-time(r: &table, row: int, column: int): either(encoder-error, time) {
   let r = magic cast(&table, pointer, r) in
   let row' = _to-c-int(row) in
   let column' = _to-c-int(column) in
@@ -108,10 +108,10 @@ inline encode-time(r: &table, row: int, column: int): except(encoder-error, time
   let time-or-none on date-text' = from-ISO8601(date-text') in
   let _ = date-text' in
   match time-or-none {
-  | OK(t) =>
+  | Right(t) =>
     let _ = date-text in
-    OK(t)
-  | Error(_) =>
-    Error(Time-Parse-Error(row, column, date-text))
+    Right(t)
+  | Left(_) =>
+    Left(Time-Parse-Error(row, column, date-text))
   }
 }

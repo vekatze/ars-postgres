@@ -37,7 +37,7 @@ define insert-author(name: &text, some-value: float, now: time): command(unit) {
     },
     result-encoder = {
       function (_: &table) {
-        OK(Unit)
+        Right(Unit)
       }
     },
   }
@@ -70,7 +70,7 @@ define select-author(limit: int): command(list(author)) {
           try name = encode-text(res, r, author-name-column) in
           try value = encode-float(res, r, author-value-column) in
           try created-at = encode-time(res, r, author-created-at-column) in
-          OK(Author(name, value, created-at))
+          Right(Author(name, value, created-at))
         })
       }
     },
@@ -91,7 +91,7 @@ define main(): unit {
   let !n = get-time() in
   let conn-or-none = connect(get-conninfo()) in
   match conn-or-none {
-  | OK(conn) =>
+  | Right(conn) =>
     let result on conn =
       with-transaction(conn, function () {
         try _ = batch(conn, include-text(reset)) in
@@ -112,10 +112,10 @@ define main(): unit {
     in
     let _ = conn in
     match result {
-    | OK(authors) =>
+    | Right(authors) =>
       _print-authors(authors);
       print("success!\n")
-    | Error(e) =>
+    | Left(e) =>
       match e {
       | Command-Error(_, message) =>
         printf("command-error:\n{}\n", [message])
@@ -128,7 +128,7 @@ define main(): unit {
         }
       }
     }
-  | Error(Connection-Error(message)) =>
+  | Left(Connection-Error(message)) =>
     printf("{}", [message])
   }
 }
