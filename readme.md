@@ -145,7 +145,7 @@ inline encode-float(r: &table, row: int, column: int): either(encoder-error, flo
 // Reads the value at (row, column) in the given table as a text.
 inline encode-text(r: &table, row: int, column: int): either(encoder-error, text)
 
-// Reads the value at (row, column) in the given table as a ISO8601 time.
+// Reads the value at (row, column) in the given table as an ISO8601 time.
 inline encode-time(r: &table, row: int, column: int): either(encoder-error, time)
 ```
 
@@ -266,7 +266,7 @@ define select-user(limit: int): command(list(user)) {
 
         // This `try-iterate` performs `function (r) {..}` for r = 0, ..., (row-size - 1) and creates a
         // list [f(0), f(1), ..., f(row-size - 1)].
-        // If an iteration fails, `try-iteraet` also fails.
+        // If an iteration fails, `try-iterate` also fails.
         try-iterate(row-size, function (r) {
           try name = encode-text(res, r, user-name-column) in
           try created-at = encode-time(res, r, user-created-at-column) in
