@@ -1,7 +1,7 @@
 import {
   core.c-string {c-string, from-c-string, to-c-string},
-  core.system {panic},
   core.text {format},
+  core.trick {unsafe-panic},
   this.foreign {CONNECTION_OK},
 }
 
@@ -65,7 +65,7 @@ resource _connection {
           [!host, !port, !dbname, !user],
         )
       in
-      panic(message)
+      unsafe-panic(message)
     }
   },
 }
