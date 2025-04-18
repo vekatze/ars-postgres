@@ -1,6 +1,6 @@
 import {
   core.c-string {c-string, to-c-string},
-  core.cell {mutate, new-cell},
+  core.cell {mutate},
   core.float.show {show-float},
   core.int.show {show-int},
   core.list {append, concat, for-each, length, unzip},
@@ -29,7 +29,7 @@ inline sql-param: type {
 define _new-placeholder(counter: &cell(int)): text {
   let i = core.cell.clone(counter) in
   mutate(counter, function (x) {
-    quote {add-int(x, 1)}
+    add-int(x, 1)
   });
   format("${}", [show-int(i)])
 }
