@@ -33,7 +33,7 @@ pkg-config libpq --libs --cflags
 Add `ars-postgres` to your project:
 
 ```sh
-neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-30.tar.zst
+neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-31.tar.zst
 ```
 
 ### Configure Your Project
