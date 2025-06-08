@@ -168,19 +168,18 @@ The following code demonstrates a basic usage of `ars-postgres`:
 ```neut
 define connect-then-insert-then-select(): unit {
   // Establishes a DB connection
-  let conn-or-none = connect(my-conn) in
+  let conn-or-none = connect(my-conn);
   match conn-or-none {
   | Left(Connection-Error(message)) =>
-    printf("{}", [message])
+    // ...
   | Right(conn) =>
     let result on conn =
       with-transaction(conn, function () {
         // Executes SQL commands using a connection
-        try _ = execute(conn, insert-user(name1, time1)) in
-        try _ = execute(conn, insert-user(name2, time2)) in
+        try _ = execute(conn, insert-user(name1, time1));
+        try _ = execute(conn, insert-user(name2, time2));
         execute(conn, select-user(5))
-      })
-    in
+      });
     // (conn is closed here because it is discarded here)
     match result {
     | Right(user-list) =>
@@ -258,18 +257,18 @@ define select-user(limit: int): command(list(user)) {
     result-encoder = {
       function (res: &table) {
         // Get the row size of the response.
-        let row-size = get-row-size(res) in
+        let row-size = get-row-size(res);
 
         // Gets the column indices by column names.
-        try user-name-column = get-column-by-name(res, "name") in
-        try user-created-at-column = get-column-by-name(res, "created_at") in
+        try user-name-column = get-column-by-name(res, "name");
+        try user-created-at-column = get-column-by-name(res, "created_at");
 
         // This `try-iterate` performs `function (r) {..}` for r = 0, ..., (row-size - 1) and creates a
         // list [f(0), f(1), ..., f(row-size - 1)].
         // If an iteration fails, `try-iterate` also fails.
         try-iterate(row-size, function (r) {
-          try name = encode-text(res, r, user-name-column) in
-          try created-at = encode-time(res, r, user-created-at-column) in
+          try name = encode-text(res, r, user-name-column);
+          try created-at = encode-time(res, r, user-created-at-column);
           Right(User(name, created-at))
         })
       }

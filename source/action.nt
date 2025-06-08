@@ -62,20 +62,19 @@ define _command-completed-p(status: int): bool {
 }
 
 define batch(c: &connection, com: &text): either(error, unit) {
-  pin com = to-c-string(com) in
+  pin com = to-c-string(com);
   let result =
     magic external PQexec(
       magic cast(&connection, pointer, c),
       magic cast(&c-string, pointer, com),
-    )
-  in
-  let status = magic external PQresultStatus(result) in
+    );
+  let status = magic external PQresultStatus(result);
   if _command-completed-p(status) {
-    let _ = magic external PQclear(result) in
+    let _ = magic external PQclear(result);
     Right(Unit)
   } else {
-    let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result)) in
-    let _ = magic external PQclear(result) in
+    let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result));
+    let _ = magic external PQclear(result);
     Left(Command-Error(status, error-message))
   }
 }
@@ -93,13 +92,13 @@ define rollback(c: &connection): either(error, unit) {
 }
 
 define with-transaction<a>(c: &connection, action: () -> either(error, a)): either(error, a) {
-  try _ = begin(c) in
+  try _ = begin(c);
   match action() {
   | Right(result) =>
-    try _ = commit(c) in
+    try _ = commit(c);
     Right(result)
   | Left(e) =>
-    try _ = rollback(c) in
+    try _ = rollback(c);
     Left(e)
   }
 }
@@ -113,13 +112,13 @@ inline _exec-params(
   template: text,
   parameters: list(sql-param),
 ): pointer {
-  let num-of-params on parameters = length(parameters) in
-  let param-values = magic alloca(int, num-of-params) in
-  let param-types = magic alloca(int, num-of-params) in
-  let _ on parameters = _store-elems(parameters, param-values) in
-  let _ on parameters = _store-oids(parameters, param-types) in
-  let result: pointer on template =
-    pin template = to-c-string(template) in
+  let num-of-params on parameters = length(parameters);
+  let param-values = magic alloca(int, num-of-params);
+  let param-types = magic alloca(int, num-of-params);
+  let _ on parameters = _store-elems(parameters, param-values);
+  let _ on parameters = _store-oids(parameters, param-types);
+  let result: pointer on template = {
+    pin template = to-c-string(template);
     magic external PQexecParams(
       magic cast(&connection, pointer, c),
       magic cast(&c-string, pointer, template),
@@ -130,23 +129,23 @@ inline _exec-params(
       null-pointer,
       zero,
     )
-  in
+  };
   discard(parameters);
   discard(template);
   result
 }
 
 inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
-  let Command of {template, parameters, result-encoder} = com in
+  let Command of {template, parameters, result-encoder} = com;
   match _prepare(template, parameters) {
   | Left(e) =>
     Left(Preparation-Error(e))
   | Right(Prepared-Command(template, parameters)) =>
-    let result = _exec-params(conn, template, parameters) in
-    let status = magic external PQresultStatus(result) in
+    let result = _exec-params(conn, template, parameters);
+    let status = magic external PQresultStatus(result);
     if _command-completed-p(status) {
-      let encoded-result = result-encoder(magic cast(pointer, &table, result)) in
-      let _ = magic external PQclear(result) in
+      let encoded-result = result-encoder(magic cast(pointer, &table, result));
+      let _ = magic external PQclear(result);
       match encoded-result {
       | Right(v) =>
         Right(v)
@@ -155,8 +154,8 @@ inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
       }
     } else {
       // ignore COPY commands for now
-      let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result)) in
-      let _ = magic external PQclear(result) in
+      let error-message = _from-c-string-pointer(magic external PQresultErrorMessage(result));
+      let _ = magic external PQclear(result);
       Left(Command-Error(status, error-message))
     }
   }

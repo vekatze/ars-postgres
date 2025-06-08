@@ -17,8 +17,8 @@ define void-encoder(_: &table): either(encoder-error, unit) {
 
 define statement(t: &text): command(unit) {
   Command of {
-    template = t,
-    parameters = [],
-    result-encoder = void-encoder,
+    template := t,
+    parameters := [],
+    result-encoder := void-encoder,
   }
 }

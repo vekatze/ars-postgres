@@ -27,7 +27,7 @@ inline sql-param: type {
 }
 
 define _new-placeholder(counter: &cell(int)): text {
-  let i = core.cell.clone(counter) in
+  let i = core.cell.clone(counter);
   mutate(counter, function (x) {
     add-int(x, 1)
   });
@@ -37,33 +37,32 @@ define _new-placeholder(counter: &cell(int)): text {
 define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-param)) {
   match p {
   | Integer(x) =>
-    pin tmp = show-int(x) in
+    pin tmp = show-int(x);
     Pair(_new-placeholder(counter), [Pair(INT8OID, to-c-string(tmp))])
   | Float(x) =>
-    pin tmp = show-float(x) in
+    pin tmp = show-float(x);
     Pair(_new-placeholder(counter), [Pair(FLOAT8OID, to-c-string(tmp))])
   | Text(x) =>
-    pin x = x in
+    pin x = x;
     Pair(_new-placeholder(counter), [Pair(TEXTOID, to-c-string(x))])
   | Time(x) =>
-    pin x = x in
+    pin x = x;
     Pair(_new-placeholder(counter), [Pair(TIMEOID, to-c-string(x))])
   | Timestamp(t) =>
-    pin tmp = to-ISO8601-UTC(t, 6) in
+    pin tmp = to-ISO8601-UTC(t, 6);
     Pair(_new-placeholder(counter), [Pair(TIMESTAMPTZOID, to-c-string(tmp))])
   | Tuple(ps) =>
     let Pair(xs, pss) =
       unzip(for-each(ps, function (p) {
         _interpret-param(counter, p)
-      }))
-    in
+      }));
     Pair(format("({})", [intercalate(xs, *", ")]), concat(pss))
   }
 }
 
 define _replace-or-fail(haystack: &text, from: &text, to: text): ?text {
-  let tmp = core.text.split(haystack, from) in
-  let len on tmp = length(tmp) in
+  let tmp = core.text.split(haystack, from);
+  let len on tmp = length(tmp);
   if ge-int(len, 2) {
     Right(core.text.intercalate(tmp, to))
   } else {
@@ -90,13 +89,13 @@ define _replace(
 ): either(preparation-error, prepared-command) {
   match ps {
   | Nil =>
-    let result on template = core.text.append(template, "\0") in
-    let _ = template in
+    let result on template = core.text.append(template, "\0");
+    let _ = template;
     Right(Prepared-Command(result, prepared-params))
   | Cons(Pair(from, param), rest) =>
-    let Pair(to, ps) = _interpret-param(counter, param) in
-    let new-template-or-none on template = _replace-or-fail(template, from, to) in
-    let _ = template in
+    let Pair(to, ps) = _interpret-param(counter, param);
+    let new-template-or-none on template = _replace-or-fail(template, from, to);
+    let _ = template;
     match new-template-or-none {
     | Right(new-template) =>
       _replace(
@@ -115,8 +114,8 @@ define _prepare(
   template: &text,
   parameters: list(pair(&text, parameter)),
 ): either(preparation-error, prepared-command) {
-  let counter = new-cell(1) in
-  let result on counter = _replace(counter, [], *template, parameters) in
-  let _ = counter in
+  let counter = make-cell(1);
+  let result on counter = _replace(counter, [], *template, parameters);
+  let _ = counter;
   result
 }
