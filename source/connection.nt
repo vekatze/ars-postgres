@@ -2,6 +2,7 @@ import {
   core.c-string {c-string, from-c-string, to-c-string},
   core.text {format},
   core.trick {panic},
+  core.type-tag {Opaque, type-tag-to-int},
   this.foreign {CONNECTION_OK},
 }
 
@@ -67,6 +68,7 @@ resource _connection {
       panic(message)
     }
   },
+  type-tag-to-int(Opaque),
 }
 
 data connection {
