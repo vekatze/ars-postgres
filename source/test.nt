@@ -29,7 +29,7 @@ define insert-author(name: &text, some-value: float, now: time): command(unit) {
   Command of {
     template := include-text(insert-author),
     parameters := {
-      [
+      List[
         Pair("__NAME__", Text(*name)),
         Pair("__SOME_VALUE__", Float(some-value)),
         Pair("__MY_TIME__", Time(*"11:23")),
@@ -56,7 +56,7 @@ define select-author(limit: int): command(list(author)) {
   Command of {
     template := include-text(select-author),
     parameters := {
-      [
+      List[
         Pair("__LIMIT__", Integer(limit)),
         Pair("__EPOCH__", Timestamp(time.time.Time of {seconds := 0, nanoseconds := 0})),
       ]

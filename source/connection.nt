@@ -63,7 +63,7 @@ resource _connection {
       pin message =
         format(
           "failed to clone the following connection:\nhost={} port={} dbname={} user={} password=<hidden>\n",
-          [!host, !port, !dbname, !user],
+          List[!host, !port, !dbname, !user],
         );
       panic(message)
     }
@@ -78,7 +78,7 @@ data connection {
 define connect(c: conninfo): either(connection-error, connection) {
   let Conn-Info of {host, port, dbname, user, password} = c;
   pin conn-text =
-    format("host={} port={} dbname={} user={} password={}", [
+    format("host={} port={} dbname={} user={} password={}", List[
       host,
       port,
       dbname,

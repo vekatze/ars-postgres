@@ -31,32 +31,32 @@ define _new-placeholder(counter: &cell(int)): text {
   mutate(counter, function (x) {
     add-int(x, 1)
   });
-  format("${}", [show-int(i)])
+  format("${}", List[show-int(i)])
 }
 
 define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-param)) {
   match p {
   | Integer(x) =>
     pin tmp = show-int(x);
-    Pair(_new-placeholder(counter), [Pair(INT8OID, to-c-string(tmp))])
+    Pair(_new-placeholder(counter), List[Pair(INT8OID, to-c-string(tmp))])
   | Float(x) =>
     pin tmp = show-float(x);
-    Pair(_new-placeholder(counter), [Pair(FLOAT8OID, to-c-string(tmp))])
+    Pair(_new-placeholder(counter), List[Pair(FLOAT8OID, to-c-string(tmp))])
   | Text(x) =>
     pin x = x;
-    Pair(_new-placeholder(counter), [Pair(TEXTOID, to-c-string(x))])
+    Pair(_new-placeholder(counter), List[Pair(TEXTOID, to-c-string(x))])
   | Time(x) =>
     pin x = x;
-    Pair(_new-placeholder(counter), [Pair(TIMEOID, to-c-string(x))])
+    Pair(_new-placeholder(counter), List[Pair(TIMEOID, to-c-string(x))])
   | Timestamp(t) =>
     pin tmp = to-ISO8601-UTC(t, 6);
-    Pair(_new-placeholder(counter), [Pair(TIMESTAMPTZOID, to-c-string(tmp))])
+    Pair(_new-placeholder(counter), List[Pair(TIMESTAMPTZOID, to-c-string(tmp))])
   | Tuple(ps) =>
     let Pair(xs, pss) =
       unzip(for-each(ps, function (p) {
         _interpret-param(counter, p)
       }));
-    Pair(format("({})", [intercalate(xs, *", ")]), concat(pss))
+    Pair(format("({})", List[intercalate(xs, *", ")]), concat(pss))
   }
 }
 
@@ -115,7 +115,7 @@ define _prepare(
   parameters: list(pair(&text, parameter)),
 ): either(preparation-error, prepared-command) {
   let counter = make-cell(1);
-  let result on counter = _replace(counter, [], *template, parameters);
+  let result on counter = _replace(counter, List[], *template, parameters);
   let _ = counter;
   result
 }
