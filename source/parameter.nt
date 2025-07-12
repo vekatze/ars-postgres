@@ -40,7 +40,7 @@ define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-
     pin tmp = show-int(x);
     Pair(_new-placeholder(counter), List[Pair(INT8OID, to-c-string(tmp))])
   | Float(x) =>
-    pin tmp = show-float(x);
+    pin tmp = show-float(x, 6);
     Pair(_new-placeholder(counter), List[Pair(FLOAT8OID, to-c-string(tmp))])
   | Text(x) =>
     pin x = x;

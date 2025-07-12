@@ -84,7 +84,7 @@ define _print-authors(xs: list(author)): unit {
     Unit
   | Cons(Author(name, value, created-at), rest) =>
     pin name' = name;
-    pin value' = show-float(value);
+    pin value' = show-float(value, 6);
     pin time = to-ISO8601-local(created-at, 6);
     print(name');
     print(" ");
