@@ -1,6 +1,7 @@
 import {
+  core.box {axiom-T},
   core.c-string {c-string, to-c-string},
-  core.cell {mutate},
+  core.cell {make-cell, mutate},
   core.float.show {show-float},
   core.int.show {show-int},
   core.list {append, concat, for-each, length, unzip},
@@ -29,7 +30,7 @@ inline sql-param: type {
 define _new-placeholder(counter: &cell(int)): text {
   let i = core.cell.clone(counter);
   mutate(counter, function (x) {
-    add-int(x, 1)
+    quote {add-int(axiom-T(x), 1)}
   });
   format("${}", List[show-int(i)])
 }
@@ -114,7 +115,7 @@ define _prepare(
   template: &text,
   parameters: list(pair(&text, parameter)),
 ): either(preparation-error, prepared-command) {
-  let counter = make-cell(1);
+  let counter = make-cell(quote {1});
   let result on counter = _replace(counter, List[], *template, parameters);
   let _ = counter;
   result
