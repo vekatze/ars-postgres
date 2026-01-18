@@ -53,8 +53,8 @@ define get-column-by-name(r: &table, column-name: &text): either(encoder-error, 
 }
 
 inline encode-int(r: &table, row: int, column: int): either(encoder-error, int) {
-  let r' = magic cast(&table, pointer, r);
-  let c-int-str = magic cast(pointer, &c-string, magic external PQgetvalue(r', _to-c-int(row), _to-c-int(column)));
+  let r = magic cast(&table, pointer, r);
+  let c-int-str = magic cast(pointer, &c-string, magic external PQgetvalue(r, _to-c-int(row), _to-c-int(column)));
   let end-ptr = magic alloca(int, 1);
   let int-val: int =
     magic external strtol(
@@ -98,12 +98,12 @@ inline encode-text(r: &table, row: int, column: int): either(encoder-error, text
 
 inline encode-time(r: &table, row: int, column: int): either(encoder-error, time) {
   let r = magic cast(&table, pointer, r);
-  let row' = _to-c-int(row);
-  let column' = _to-c-int(column);
-  let date-text = from-c-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row', column')));
-  let date-text' on date-text = replace(date-text, " ", *"T");
-  let time-or-none on date-text' = from-ISO8601(date-text');
-  let _ = date-text';
+  let row-c = _to-c-int(row);
+  let column-c = _to-c-int(column);
+  let date-text = from-c-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row-c, column-c)));
+  let date-text-replaced on date-text = replace(date-text, " ", *"T");
+  let time-or-none on date-text-replaced = from-ISO8601(date-text-replaced);
+  let _ = date-text-replaced;
   match time-or-none {
   | Right(t) =>
     let _ = date-text;

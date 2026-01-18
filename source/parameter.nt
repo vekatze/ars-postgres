@@ -19,18 +19,18 @@ data parameter {
 | Tuple(list(parameter))
 }
 
-inline oid: type {
+alias oid {
   int
 }
 
-inline sql-param: type {
+alias sql-param {
   pair(oid, c-string)
 }
 
 define _new-placeholder(counter: &cell(int)): text {
   let i = core.cell.clone(counter);
   mutate(counter, function (x) {
-    quote {add-int(axiom-T(x), 1)}
+    lift {add-int(axiom-T(x), 1)}
   });
   format("${}", List[show-int(i)])
 }
@@ -115,7 +115,7 @@ define _prepare(
   template: &text,
   parameters: list(pair(&text, parameter)),
 ): either(preparation-error, prepared-command) {
-  let counter = make-cell(quote {1});
+  let counter = make-cell(lift {1});
   let result on counter = _replace(counter, List[], *template, parameters);
   let _ = counter;
   result

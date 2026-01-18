@@ -2,7 +2,6 @@ import {
   core.c-string {c-string, from-c-string, to-c-string},
   core.text {format},
   core.trick {panic},
-  core.type-tag {Opaque, type-tag-to-int},
   this.foreign {CONNECTION_OK},
 }
 
@@ -33,9 +32,9 @@ data connection-error {
 }
 
 nominal {
-  connection: type,
-  _connection: type,
-  connect(c: conninfo): either(connection-error, connection),
+  data connection,
+  resource _connection,
+  define connect(c: conninfo): either(connection-error, connection),
 }
 
 inline _from-c-string-pointer(p: pointer): text {
@@ -68,7 +67,6 @@ resource _connection {
       panic(message)
     }
   },
-  type-tag-to-int(Opaque),
 }
 
 data connection {

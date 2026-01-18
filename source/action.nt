@@ -36,7 +36,7 @@ define _store-elems(elems: &list(sql-param), ptr: pointer): unit {
   | Nil =>
     Unit
   | Cons(Pair(_, x), xs) =>
-    store-int(core.magic.cast(&c-string, int, x), ptr);
+    store-int(core.magic.cast<&c-string, int>(x), ptr);
     _store-elems(xs, shift(ptr, core.word.size))
   }
 }
