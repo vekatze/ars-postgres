@@ -16,7 +16,7 @@ import {
 }
 
 define get-conninfo(): this.connection.conninfo {
-  Conn-Info of {
+  Conn-Info{
     host := *"127.0.0.1",
     port := *"5432",
     dbname := *"sample",
@@ -26,7 +26,7 @@ define get-conninfo(): this.connection.conninfo {
 }
 
 define insert-author(name: &text, some-value: float, now: time): command(unit) {
-  Command of {
+  Command{
     template := include-text(insert-author),
     parameters := {
       List[
@@ -53,12 +53,12 @@ data author {
 }
 
 define select-author(limit: int): command(list(author)) {
-  Command of {
+  Command{
     template := include-text(select-author),
     parameters := {
       List[
         Pair("__LIMIT__", Integer(limit)),
-        Pair("__EPOCH__", Timestamp(time.time.Time of {seconds := 0, nanoseconds := 0})),
+        Pair("__EPOCH__", Timestamp(time.time.Time{seconds := 0, nanoseconds := 0})),
       ]
     },
     result-encoder := {
@@ -103,17 +103,17 @@ define main(): unit {
     let result on conn =
       with-transaction(conn, function () {
         try _ = batch(conn, include-text(reset));
-        try _ = execute(conn, insert-author("Virginia Woolf", 2.2, !n));
+        try _ = execute(conn, insert-author("Virginia Woolf", 2.2, n));
         try _ =
           execute(conn, insert-author(
             "Aristotle",
             1.12,
-            time.time.Time of {seconds := -9999999, nanoseconds := 123456789},
+            time.time.Time{seconds := -9999999, nanoseconds := 123456789},
           ));
-        try _ = execute(conn, insert-author("李白", 3.38, !n));
-        try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, !n));
-        try _ = execute(conn, insert-author("宮沢賢治", 3333333.222, !n));
-        try _ = execute(conn, insert-author("Stefan Zweig", -1234.56789, !n));
+        try _ = execute(conn, insert-author("李白", 3.38, n));
+        try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, n));
+        try _ = execute(conn, insert-author("宮沢賢治", 3333333.222, n));
+        try _ = execute(conn, insert-author("Stefan Zweig", -1234.56789, n));
         execute(conn, select-author(20))
       });
     let _ = conn;

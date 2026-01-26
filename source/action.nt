@@ -136,7 +136,7 @@ inline _exec-params(
 }
 
 inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
-  let Command of {template, parameters, result-encoder} = com;
+  let Command{template, parameters, result-encoder} = com;
   match _prepare(template, parameters) {
   | Left(e) =>
     Left(Preparation-Error(e))
