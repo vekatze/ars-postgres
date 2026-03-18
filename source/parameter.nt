@@ -27,7 +27,7 @@ alias sql-param {
   pair(oid, c-string)
 }
 
-define _new-placeholder(counter: &cell(int)): text {
+define _new-placeholder(counter: &cell(int)) -> text {
   let i = core.cell.clone(counter);
   mutate(counter, function (x) {
     lift {add-int(axiom-T(x), 1)}
@@ -35,7 +35,7 @@ define _new-placeholder(counter: &cell(int)): text {
   format("${}", List[show-int(i)])
 }
 
-define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-param)) {
+define _interpret-param(counter: &cell(int), p: parameter) -> pair(text, list(sql-param)) {
   match p {
   | Integer(x) =>
     pin tmp = show-int(x);
@@ -61,7 +61,7 @@ define _interpret-param(counter: &cell(int), p: parameter): pair(text, list(sql-
   }
 }
 
-define _replace-or-fail(haystack: &text, from: &text, to: text): ?text {
+define _replace-or-fail(haystack: &text, from: &text, to: text) -> ?text {
   let tmp = core.text.split(haystack, from);
   let len on tmp = length(tmp);
   if ge-int(len, 2) {
@@ -87,7 +87,8 @@ define _replace(
   prepared-params: list(sql-param),
   template: text,
   ps: list(pair(&text, parameter)),
-): either(preparation-error, prepared-command) {
+)->
+either(preparation-error, prepared-command) {
   match ps {
   | Nil =>
     let result on template = core.text.append(template, "\0");
@@ -114,7 +115,8 @@ define _replace(
 define _prepare(
   template: &text,
   parameters: list(pair(&text, parameter)),
-): either(preparation-error, prepared-command) {
+)->
+either(preparation-error, prepared-command) {
   let counter = make-cell(lift {1});
   let result on counter = _replace(counter, List[], *template, parameters);
   let _ = counter;

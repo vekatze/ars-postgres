@@ -34,10 +34,10 @@ data connection-error {
 nominal {
   data connection,
   resource _connection,
-  define connect(c: conninfo): either(connection-error, connection),
+  define connect(c: conninfo) -> either(connection-error, connection),
 }
 
-inline _from-c-string-pointer(p: pointer): text {
+inline _from-c-string-pointer(p: pointer) -> text {
   from-c-string(magic cast(pointer, &c-string, p))
 }
 
@@ -67,13 +67,14 @@ resource _connection {
       panic(message)
     }
   },
+  -1,
 }
 
 data connection {
 | _Connection(_connection)
 }
 
-define connect(c: conninfo): either(connection-error, connection) {
+define connect(c: conninfo) -> either(connection-error, connection) {
   let Conn-Info{host, port, dbname, user, password} = c;
   pin conn-text =
     format("host={} port={} dbname={} user={} password={}", List[

@@ -15,7 +15,7 @@ import {
   },
 }
 
-define get-conninfo(): this.connection.conninfo {
+define get-conninfo() -> this.connection.conninfo {
   Conn-Info{
     host := *"127.0.0.1",
     port := *"5432",
@@ -25,7 +25,7 @@ define get-conninfo(): this.connection.conninfo {
   }
 }
 
-define insert-author(name: &text, some-value: float, now: time): command(unit) {
+define insert-author(name: &text, some-value: float, now: time) -> command(unit) {
   Command{
     template := include-text(insert-author),
     parameters := {
@@ -52,7 +52,7 @@ data author {
   )
 }
 
-define select-author(limit: int): command(list(author)) {
+define select-author(limit: int) -> command(list(author)) {
   Command{
     template := include-text(select-author),
     parameters := {
@@ -78,7 +78,7 @@ define select-author(limit: int): command(list(author)) {
   }
 }
 
-define _print-authors(xs: list(author)): unit {
+define _print-authors(xs: list(author)) -> unit {
   match xs {
   | Nil =>
     Unit
@@ -95,7 +95,7 @@ define _print-authors(xs: list(author)): unit {
   }
 }
 
-define main(): unit {
+define main() -> unit {
   let !n = get-time();
   let conn-or-none = connect(get-conninfo());
   match conn-or-none {

@@ -11,11 +11,11 @@ data command(a) {
   )
 }
 
-define void-encoder(_: &table): either(encoder-error, unit) {
+define void-encoder(_: &table) -> either(encoder-error, unit) {
   Right(Unit)
 }
 
-define statement(t: &text): command(unit) {
+define statement(t: &text) -> command(unit) {
   Command{
     template := t,
     parameters := List[],

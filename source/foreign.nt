@@ -11,61 +11,61 @@ foreign {
   neut_ars_postgres_v0_1_OID_SIZE(): int,
 }
 
-inline CONNECTION_OK: int {
+constant CONNECTION_OK: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_CONNECTION_OK()
   }
 }
 
-inline PGRES_EMPTY_QUERY: int {
+constant PGRES_EMPTY_QUERY: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_EMPTY_QUERY()
   }
 }
 
-inline PGRES_TUPLES_OK: int {
+constant PGRES_TUPLES_OK: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_TUPLES_OK()
   }
 }
 
-inline PGRES_COMMAND_OK: int {
+constant PGRES_COMMAND_OK: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_COMMAND_OK()
   }
 }
 
-inline PGRES_COPY_OUT: int {
+constant PGRES_COPY_OUT: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_COPY_OUT()
   }
 }
 
-inline PGRES_COPY_IN: int {
+constant PGRES_COPY_IN: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_COPY_IN()
   }
 }
 
-inline PGRES_BAD_RESPONSE: int {
+constant PGRES_BAD_RESPONSE: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_BAD_RESPONSE()
   }
 }
 
-inline PGRES_NONFATAL_ERROR: int {
+constant PGRES_NONFATAL_ERROR: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR()
   }
 }
 
-inline PGRES_FATAL_ERROR: int {
+constant PGRES_FATAL_ERROR: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_PGRES_FATAL_ERROR()
   }
 }
 
-inline OID_SIZE: int {
+constant OID_SIZE: int {
   magic opaque-value {
     magic external neut_ars_postgres_v0_1_OID_SIZE()
   }

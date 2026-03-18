@@ -31,7 +31,7 @@ data error {
 | Encoder-Error(detail: encoder-error)
 }
 
-define _store-elems(elems: &list(sql-param), ptr: pointer): unit {
+define _store-elems(elems: &list(sql-param), ptr: pointer) -> unit {
   case elems {
   | Nil =>
     Unit
@@ -41,7 +41,7 @@ define _store-elems(elems: &list(sql-param), ptr: pointer): unit {
   }
 }
 
-define _store-oids(elems: &list(sql-param), ptr: pointer): unit {
+define _store-oids(elems: &list(sql-param), ptr: pointer) -> unit {
   case elems {
   | Nil =>
     Unit
@@ -51,7 +51,7 @@ define _store-oids(elems: &list(sql-param), ptr: pointer): unit {
   }
 }
 
-define _command-completed-p(status: int): bool {
+define _command-completed-p(status: int) -> bool {
   if eq-int(status, PGRES_COMMAND_OK) {
     True
   } else-if eq-int(status, PGRES_TUPLES_OK) {
@@ -61,7 +61,7 @@ define _command-completed-p(status: int): bool {
   }
 }
 
-define batch(c: &connection, com: &text): either(error, unit) {
+define batch(c: &connection, com: &text) -> either(error, unit) {
   pin com = to-c-string(com);
   let result =
     magic external PQexec(
@@ -79,19 +79,19 @@ define batch(c: &connection, com: &text): either(error, unit) {
   }
 }
 
-define begin(c: &connection): either(error, unit) {
+define begin(c: &connection) -> either(error, unit) {
   batch(c, "begin")
 }
 
-define commit(c: &connection): either(error, unit) {
+define commit(c: &connection) -> either(error, unit) {
   batch(c, "commit")
 }
 
-define rollback(c: &connection): either(error, unit) {
+define rollback(c: &connection) -> either(error, unit) {
   batch(c, "rollback")
 }
 
-define with-transaction<a>(c: &connection, action: () -> either(error, a)): either(error, a) {
+define with-transaction<a>(c: &connection, action: () -> either(error, a)) -> either(error, a) {
   try _ = begin(c);
   match action() {
   | Right(result) =>
@@ -103,7 +103,7 @@ define with-transaction<a>(c: &connection, action: () -> either(error, a)): eith
   }
 }
 
-inline zero: int {
+constant zero: int {
   0
 }
 
@@ -111,7 +111,8 @@ inline _exec-params(
   c: &connection,
   template: text,
   parameters: list(sql-param),
-): pointer {
+)->
+pointer {
   let num-of-params on parameters = length(parameters);
   let param-values = magic alloca(int, num-of-params);
   let param-types = magic alloca(int, num-of-params);
@@ -135,7 +136,7 @@ inline _exec-params(
   result
 }
 
-inline execute<a>(conn: &connection, com: command(a)): either(error, a) {
+inline execute<a>(conn: &connection, com: command(a)) -> either(error, a) {
   let Command{template, parameters, result-encoder} = com;
   match _prepare(template, parameters) {
   | Left(e) =>
