@@ -42,19 +42,19 @@ inline _from-c-string-pointer(p: pointer) -> text {
 }
 
 resource _connection {
-  function (ptr: int) {
+  (ptr: int) => {
     let ptr = magic cast(int, pointer, ptr);
     let _ = magic external PQfinish(ptr);
     Unit
   },
-  function (ptr: int) {
+  (ptr: int) => {
     let ptr = magic cast(int, pointer, ptr);
     let !host = _from-c-string-pointer(magic external PQhost(ptr));
     let !port = _from-c-string-pointer(magic external PQport(ptr));
     let !dbname = _from-c-string-pointer(magic external PQdb(ptr));
     let !user = _from-c-string-pointer(magic external PQuser(ptr));
     let password = _from-c-string-pointer(magic external PQpass(ptr));
-    let new-conn = connect(Conn-Info{host, port, dbname, user, password});
+    let new-conn = connect(Conn-Info {host, port, dbname, user, password});
     match new-conn {
     | Right(c) =>
       magic cast(connection, int, c)
@@ -75,7 +75,7 @@ data connection {
 }
 
 define connect(c: conninfo) -> either(connection-error, connection) {
-  let Conn-Info{host, port, dbname, user, password} = c;
+  let Conn-Info {host, port, dbname, user, password} = c;
   pin conn-text =
     format("host={} port={} dbname={} user={} password={}", List[
       host,

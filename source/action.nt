@@ -111,8 +111,7 @@ inline _exec-params(
   c: &connection,
   template: text,
   parameters: list(sql-param),
-)->
-pointer {
+) -> pointer {
   let num-of-params on parameters = length(parameters);
   let param-values = magic alloca(int, num-of-params);
   let param-types = magic alloca(int, num-of-params);
@@ -137,7 +136,7 @@ pointer {
 }
 
 inline execute<a>(conn: &connection, com: command(a)) -> either(error, a) {
-  let Command{template, parameters, result-encoder} = com;
+  let Command {template, parameters, result-encoder} = com;
   match _prepare(template, parameters) {
   | Left(e) =>
     Left(Preparation-Error(e))

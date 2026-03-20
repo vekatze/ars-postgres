@@ -16,7 +16,7 @@ import {
 }
 
 define get-conninfo() -> this.connection.conninfo {
-  Conn-Info{
+  Conn-Info {
     host := *"127.0.0.1",
     port := *"5432",
     dbname := *"sample",
@@ -26,7 +26,7 @@ define get-conninfo() -> this.connection.conninfo {
 }
 
 define insert-author(name: &text, some-value: float, now: time) -> command(unit) {
-  Command{
+  Command {
     template := include-text(insert-author),
     parameters := {
       List[
@@ -37,7 +37,7 @@ define insert-author(name: &text, some-value: float, now: time) -> command(unit)
       ]
     },
     result-encoder := {
-      function (_: &table) {
+      (_: &table) => {
         Right(Unit)
       }
     },
@@ -53,21 +53,21 @@ data author {
 }
 
 define select-author(limit: int) -> command(list(author)) {
-  Command{
+  Command {
     template := include-text(select-author),
     parameters := {
       List[
         Pair("__LIMIT__", Integer(limit)),
-        Pair("__EPOCH__", Timestamp(time.time.Time{seconds := 0, nanoseconds := 0})),
+        Pair("__EPOCH__", Timestamp(time.time.Time {seconds := 0, nanoseconds := 0})),
       ]
     },
     result-encoder := {
-      function (res: &table) {
+      (res: &table) => {
         let row-size = get-row-size(res);
         try author-name-column = get-column-by-name(res, "name");
         try author-value-column = get-column-by-name(res, "some_value");
         try author-created-at-column = get-column-by-name(res, "created_at");
-        iterate-E(row-size, function (r) {
+        iterate-E(row-size, (r) => {
           try name = encode-text(res, r, author-name-column);
           try value = encode-float(res, r, author-value-column);
           try created-at = encode-time(res, r, author-created-at-column);
@@ -101,14 +101,14 @@ define main() -> unit {
   match conn-or-none {
   | Right(conn) =>
     let result on conn =
-      with-transaction(conn, function () {
+      with-transaction(conn, () => {
         try _ = batch(conn, include-text(reset));
         try _ = execute(conn, insert-author("Virginia Woolf", 2.2, n));
         try _ =
           execute(conn, insert-author(
             "Aristotle",
             1.12,
-            time.time.Time{seconds := -9999999, nanoseconds := 123456789},
+            time.time.Time {seconds := -9999999, nanoseconds := 123456789},
           ));
         try _ = execute(conn, insert-author("李白", 3.38, n));
         try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, n));

@@ -29,7 +29,7 @@ alias sql-param {
 
 define _new-placeholder(counter: &cell(int)) -> text {
   let i = core.cell.clone(counter);
-  mutate(counter, function (x) {
+  mutate(counter, (x) => {
     lift {add-int(axiom-T(x), 1)}
   });
   format("${}", List[show-int(i)])
@@ -54,7 +54,7 @@ define _interpret-param(counter: &cell(int), p: parameter) -> pair(text, list(sq
     Pair(_new-placeholder(counter), List[Pair(TIMESTAMPTZOID, to-c-string(tmp))])
   | Tuple(ps) =>
     let Pair(xs, pss) =
-      unzip(for-each(ps, function (p) {
+      unzip(for-each(ps, (p) => {
         _interpret-param(counter, p)
       }));
     Pair(format("({})", List[intercalate(xs, *", ")]), concat(pss))
@@ -87,8 +87,7 @@ define _replace(
   prepared-params: list(sql-param),
   template: text,
   ps: list(pair(&text, parameter)),
-)->
-either(preparation-error, prepared-command) {
+) -> either(preparation-error, prepared-command) {
   match ps {
   | Nil =>
     let result on template = core.text.append(template, "\0");
@@ -115,8 +114,7 @@ either(preparation-error, prepared-command) {
 define _prepare(
   template: &text,
   parameters: list(pair(&text, parameter)),
-)->
-either(preparation-error, prepared-command) {
+) -> either(preparation-error, prepared-command) {
   let counter = make-cell(lift {1});
   let result on counter = _replace(counter, List[], *template, parameters);
   let _ = counter;
