@@ -1,6 +1,6 @@
 import {
   core.c-string {c-string, from-c-string, to-c-string},
-  core.text {format},
+  core.string {format},
   core.trick {panic},
   this.foreign {CONNECTION_OK},
 }
@@ -19,16 +19,16 @@ foreign {
 
 data conninfo {
 | Conn-Info(
-    host: text,
-    port: text,
-    dbname: text,
-    user: text,
-    password: text,
+    host: string,
+    port: string,
+    dbname: string,
+    user: string,
+    password: string,
   )
 }
 
 data connection-error {
-| Connection-Error(message: text)
+| Connection-Error(message: string)
 }
 
 nominal {
@@ -37,7 +37,7 @@ nominal {
   define connect(c: conninfo) -> either(connection-error, connection),
 }
 
-inline _from-c-string-pointer(p: pointer) -> text {
+inline _from-c-string-pointer(p: pointer) -> string {
   from-c-string(magic cast(pointer, &c-string, p))
 }
 
@@ -76,7 +76,7 @@ data connection {
 
 define connect(c: conninfo) -> either(connection-error, connection) {
   let Conn-Info {host, port, dbname, user, password} = c;
-  pin conn-text =
+  pin conn-string =
     format("host={} port={} dbname={} user={} password={}", List[
       host,
       port,
@@ -84,9 +84,9 @@ define connect(c: conninfo) -> either(connection-error, connection) {
       user,
       password,
     ]);
-  let conn-text = to-c-string(conn-text);
-  let conn on conn-text = magic external PQconnectdb(magic cast(&c-string, pointer, conn-text));
-  let _ = conn-text;
+  let conn-string = to-c-string(conn-string);
+  let conn on conn-string = magic external PQconnectdb(magic cast(&c-string, pointer, conn-string));
+  let _ = conn-string;
   let conn = magic cast(pointer, connection, conn);
   let status: int on conn = magic external PQstatus(magic cast(&connection, pointer, conn));
   if eq-int(status, CONNECTION_OK) {

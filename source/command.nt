@@ -5,8 +5,8 @@ import {
 
 data command(a) {
 | Command(
-    template: &text,
-    parameters: list(pair(&text, parameter)),
+    template: &string,
+    parameters: list(pair(&string, parameter)),
     result-encoder: (&table) -> either(encoder-error, a),
   )
 }
@@ -15,7 +15,7 @@ define void-encoder(_: &table) -> either(encoder-error, unit) {
   Right(Unit)
 }
 
-define statement(t: &text) -> command(unit) {
+define statement(t: &string) -> command(unit) {
   Command {
     template := t,
     parameters := List[],

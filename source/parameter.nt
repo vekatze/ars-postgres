@@ -5,7 +5,7 @@ import {
   core.float.show {show-float},
   core.int.show {show-int},
   core.list {append, concat, for-each, length, unzip},
-  core.text {format, intercalate},
+  core.string {format, intercalate},
   this.constant {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
   time.time {time, to-ISO8601-UTC},
 }
@@ -13,8 +13,8 @@ import {
 data parameter {
 | Integer(int)
 | Float(float)
-| Text(text)
-| Time(text)
+| Text(string)
+| Time(string)
 | Timestamp(time)
 | Tuple(list(parameter))
 }
@@ -27,7 +27,7 @@ alias sql-param {
   pair(oid, c-string)
 }
 
-define _new-placeholder(counter: &cell(int)) -> text {
+define _new-placeholder(counter: &cell(int)) -> string {
   let i = core.cell.clone(counter);
   mutate(counter, (x) => {
     lift {add-int(axiom-T(x), 1)}
@@ -35,7 +35,7 @@ define _new-placeholder(counter: &cell(int)) -> text {
   format("${}", List[show-int(i)])
 }
 
-define _interpret-param(counter: &cell(int), p: parameter) -> pair(text, list(sql-param)) {
+define _interpret-param(counter: &cell(int), p: parameter) -> pair(string, list(sql-param)) {
   match p {
   | Integer(x) =>
     pin tmp = show-int(x);
@@ -61,23 +61,23 @@ define _interpret-param(counter: &cell(int), p: parameter) -> pair(text, list(sq
   }
 }
 
-define _replace-or-fail(haystack: &text, from: &text, to: text) -> ?text {
-  let tmp = core.text.split(haystack, from);
+define _replace-or-fail(haystack: &string, from: &string, to: string) -> ?string {
+  let tmp = core.string.split(haystack, from);
   let len on tmp = length(tmp);
   if ge-int(len, 2) {
-    Right(core.text.intercalate(tmp, to))
+    Right(core.string.intercalate(tmp, to))
   } else {
     none
   }
 }
 
 data preparation-error {
-| Unknown-Placeholder(text)
+| Unknown-Placeholder(string)
 }
 
 data prepared-command {
 | Prepared-Command(
-    template: text,
+    template: string,
     parameters: list(sql-param),
   )
 }
@@ -85,12 +85,12 @@ data prepared-command {
 define _replace(
   counter: &cell(int),
   prepared-params: list(sql-param),
-  template: text,
-  ps: list(pair(&text, parameter)),
+  template: string,
+  ps: list(pair(&string, parameter)),
 ) -> either(preparation-error, prepared-command) {
   match ps {
   | Nil =>
-    let result on template = core.text.append(template, "\0");
+    let result on template = core.string.append(template, "\0");
     let _ = template;
     Right(Prepared-Command(result, prepared-params))
   | Cons(Pair(from, param), rest) =>
@@ -112,8 +112,8 @@ define _replace(
 }
 
 define _prepare(
-  template: &text,
-  parameters: list(pair(&text, parameter)),
+  template: &string,
+  parameters: list(pair(&string, parameter)),
 ) -> either(preparation-error, prepared-command) {
   let counter = make-cell(lift {1});
   let result on counter = _replace(counter, List[], *template, parameters);

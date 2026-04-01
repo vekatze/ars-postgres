@@ -1,14 +1,15 @@
 import {
   core.float.show {show-float},
   core.list {iterate-E},
-  core.text.io {print-line},
+  core.string {from-text},
+  core.string.io {print-line},
   this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
   this.command {Command, command},
   this.connection {Conn-Info, Connection-Error, connect},
   this.parameter {Float, Integer, Text, Time, Timestamp, Unknown-Placeholder},
-  this.table {encode-float, encode-text, encode-time, get-column-by-name, get-row-size, table},
+  this.table {encode-float, encode-string, encode-time, get-column-by-name, get-row-size, table},
   time.time {get-time, time, to-ISO8601-local},
-  static {
+  text-file {
     insert-author,
     reset,
     select-author,
@@ -25,9 +26,9 @@ define get-conninfo() -> this.connection.conninfo {
   }
 }
 
-define insert-author(name: &text, some-value: float, now: time) -> command(unit) {
+define insert-author(name: &string, some-value: float, now: time) -> command(unit) {
   Command {
-    template := include-text(insert-author),
+    template := from-text(static insert-author),
     parameters := {
       List[
         Pair("__NAME__", Text(*name)),
@@ -46,7 +47,7 @@ define insert-author(name: &text, some-value: float, now: time) -> command(unit)
 
 data author {
 | Author(
-    name: text,
+    name: string,
     value: float,
     created-at: time,
   )
@@ -54,7 +55,7 @@ data author {
 
 define select-author(limit: int) -> command(list(author)) {
   Command {
-    template := include-text(select-author),
+    template := from-text(static select-author),
     parameters := {
       List[
         Pair("__LIMIT__", Integer(limit)),
@@ -68,7 +69,7 @@ define select-author(limit: int) -> command(list(author)) {
         try author-value-column = get-column-by-name(res, "some_value");
         try author-created-at-column = get-column-by-name(res, "created_at");
         iterate-E(row-size, (r) => {
-          try name = encode-text(res, r, author-name-column);
+          try name = encode-string(res, r, author-name-column);
           try value = encode-float(res, r, author-value-column);
           try created-at = encode-time(res, r, author-created-at-column);
           Right(Author(name, value, created-at))
@@ -102,7 +103,7 @@ define main() -> unit {
   | Right(conn) =>
     let result on conn =
       with-transaction(conn, () => {
-        try _ = batch(conn, include-text(reset));
+        try _ = batch(conn, from-text(static reset));
         try _ = execute(conn, insert-author("Virginia Woolf", 2.2, n));
         try _ =
           execute(conn, insert-author(
