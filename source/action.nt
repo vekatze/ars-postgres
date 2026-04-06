@@ -18,11 +18,11 @@ import {
 }
 
 foreign {
-  PQexec(pointer, pointer): pointer,
-  PQexecParams(pointer, pointer, int, pointer, pointer, pointer, pointer, int): pointer,
-  PQresultStatus(pointer): int,
-  PQresultErrorMessage(pointer): pointer,
-  PQclear(pointer): void,
+  PQexec(pointer, pointer) -> pointer,
+  PQexecParams(pointer, pointer, int, pointer, pointer, pointer, pointer, int) -> pointer,
+  PQresultStatus(pointer) -> int,
+  PQresultErrorMessage(pointer) -> pointer,
+  PQclear(pointer) -> void,
 }
 
 data error {

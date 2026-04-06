@@ -7,12 +7,12 @@ import {
 }
 
 foreign {
-  PQnfields(pointer): c-int,
-  PQntuples(pointer): c-int,
-  PQgetvalue(pointer, c-int, c-int): pointer,
-  PQfnumber(pointer, pointer): c-int,
-  strtol(pointer, pointer, c-int): int,
-  strtod(pointer, pointer): float,
+  PQnfields(pointer) -> c-int,
+  PQntuples(pointer) -> c-int,
+  PQgetvalue(pointer, c-int, c-int) -> pointer,
+  PQfnumber(pointer, pointer) -> c-int,
+  strtol(pointer, pointer, c-int) -> int,
+  strtod(pointer, pointer) -> float,
 }
 
 data table {}

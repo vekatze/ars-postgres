@@ -6,15 +6,15 @@ import {
 }
 
 foreign {
-  PQconnectdb(pointer): pointer,
-  PQstatus(pointer): int,
-  PQfinish(pointer): void,
-  PQhost(pointer): pointer,
-  PQport(pointer): pointer,
-  PQdb(pointer): pointer,
-  PQuser(pointer): pointer,
-  PQpass(pointer): pointer,
-  PQerrorMessage(pointer): pointer,
+  PQconnectdb(pointer) -> pointer,
+  PQstatus(pointer) -> int,
+  PQfinish(pointer) -> void,
+  PQhost(pointer) -> pointer,
+  PQport(pointer) -> pointer,
+  PQdb(pointer) -> pointer,
+  PQuser(pointer) -> pointer,
+  PQpass(pointer) -> pointer,
+  PQerrorMessage(pointer) -> pointer,
 }
 
 data conninfo {

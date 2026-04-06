@@ -1,14 +1,14 @@
 foreign {
-  neut_ars_postgres_v0_1_CONNECTION_OK(): int,
-  neut_ars_postgres_v0_1_PGRES_EMPTY_QUERY(): int,
-  neut_ars_postgres_v0_1_PGRES_TUPLES_OK(): int,
-  neut_ars_postgres_v0_1_PGRES_COMMAND_OK(): int,
-  neut_ars_postgres_v0_1_PGRES_COPY_OUT(): int,
-  neut_ars_postgres_v0_1_PGRES_COPY_IN(): int,
-  neut_ars_postgres_v0_1_PGRES_BAD_RESPONSE(): int,
-  neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR(): int,
-  neut_ars_postgres_v0_1_PGRES_FATAL_ERROR(): int,
-  neut_ars_postgres_v0_1_OID_SIZE(): int,
+  neut_ars_postgres_v0_1_CONNECTION_OK() -> int,
+  neut_ars_postgres_v0_1_PGRES_EMPTY_QUERY() -> int,
+  neut_ars_postgres_v0_1_PGRES_TUPLES_OK() -> int,
+  neut_ars_postgres_v0_1_PGRES_COMMAND_OK() -> int,
+  neut_ars_postgres_v0_1_PGRES_COPY_OUT() -> int,
+  neut_ars_postgres_v0_1_PGRES_COPY_IN() -> int,
+  neut_ars_postgres_v0_1_PGRES_BAD_RESPONSE() -> int,
+  neut_ars_postgres_v0_1_PGRES_NONFATAL_ERROR() -> int,
+  neut_ars_postgres_v0_1_PGRES_FATAL_ERROR() -> int,
+  neut_ars_postgres_v0_1_OID_SIZE() -> int,
 }
 
 constant CONNECTION_OK: int {
