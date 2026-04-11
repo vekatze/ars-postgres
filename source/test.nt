@@ -17,7 +17,7 @@ import {
 }
 
 define get-conninfo() -> this.connection.conninfo {
-  Conn-Info {
+  Conn-Info{
     host := *"127.0.0.1",
     port := *"5432",
     dbname := *"sample",
@@ -27,7 +27,7 @@ define get-conninfo() -> this.connection.conninfo {
 }
 
 define insert-author(name: &string, some-value: float, now: time) -> command(unit) {
-  Command {
+  Command{
     template := from-text(static insert-author),
     parameters := {
       List[
@@ -54,12 +54,12 @@ data author {
 }
 
 define select-author(limit: int) -> command(list(author)) {
-  Command {
+  Command{
     template := from-text(static select-author),
     parameters := {
       List[
         Pair("__LIMIT__", Integer(limit)),
-        Pair("__EPOCH__", Timestamp(time.time.Time {seconds := 0, nanoseconds := 0})),
+        Pair("__EPOCH__", Timestamp(time.time.Time{seconds := 0, nanoseconds := 0})),
       ]
     },
     result-encoder := {
@@ -109,7 +109,7 @@ define main() -> unit {
           execute(conn, insert-author(
             "Aristotle",
             1.12,
-            time.time.Time {seconds := -9999999, nanoseconds := 123456789},
+            time.time.Time{seconds := -9999999, nanoseconds := 123456789},
           ));
         try _ = execute(conn, insert-author("李白", 3.38, n));
         try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, n));
