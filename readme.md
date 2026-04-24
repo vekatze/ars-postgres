@@ -33,7 +33,7 @@ pkg-config libpq --libs --cflags
 Add `ars-postgres` to your project:
 
 ```sh
-neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-43.tar.zst
+neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-54.tar.zst
 ```
 
 ### Configure Your Project
@@ -56,7 +56,7 @@ Finally, edit your project's `module.ens`:
   zen {
     // ↓ add
     build-option [
-      "$(pkg-config libcurl --libs --cflags)",
+      "$(pkg-config libpq --libs --cflags)",
     ],
     // ↑ add
   },
@@ -73,28 +73,45 @@ Finally, edit your project's `module.ens`:
 // Represents a connection info.
 data conninfo {
 | Conn-Info(
-    host: text,
-    port: text,
-    dbname: text,
-    user: text,
-    password: text,
+    host: string,
+    port: string,
+    dbname: string,
+    user: string,
+    password: string,
   )
 }
+
+// Represents an error happened while establishing a connection.
+data connection-error {
+| Connection-Error(message: string)
+}
+
+// Represents an open connection.
+data connection
 
 // Establishes a connection to a DB.
 // A connection is closed when the corresponding variable is not used.
 // A connection is copied when the corresponding variable is used more than once.
-define connect(c: conninfo): either(connection-error, connection)
+define connect(c: conninfo) -> either(connection-error, connection)
 
 // Executes a parameterized SQL command.
-inline execute<a>(conn: &connection, com: command(a)): either(error, a)
+inline execute<a>(conn: &connection, com: command(a)) -> either(error, a)
 
 // Executes a raw SQL command.
-define batch(c: &connection, com: &text): either(error, unit)
+define batch(c: &connection, com: &string) -> either(error, unit)
+
+// Executes `begin`.
+define begin(c: &connection) -> either(error, unit)
+
+// Executes `commit`.
+define commit(c: &connection) -> either(error, unit)
+
+// Executes `rollback`.
+define rollback(c: &connection) -> either(error, unit)
 
 // Executes the given action in a `begin ... commit`.
-// `rollback` is executed instead of `commit` if `action` results in an error,
-define with-transaction<a>(c: &connection, action: () -> either(error, a)): either(error, a)
+// `rollback` is executed instead of `commit` if `action` results in an error.
+define with-transaction<a>(c: &connection, action: () -> either(error, a)) -> either(error, a)
 ```
 
 ### Command
@@ -104,8 +121,8 @@ define with-transaction<a>(c: &connection, action: () -> either(error, a)): eith
 // See the `Command` section of `Example` in this readme.
 data command(a) {
 | Command(
-    template: &text,
-    parameters: list(pair(&text, parameter)),
+    template: &string,
+    parameters: list(pair(&string, parameter)),
     result-encoder: (&table) -> either(encoder-error, a),
   )
 }
@@ -114,11 +131,17 @@ data command(a) {
 data parameter {
 | Integer(int)
 | Float(float)
-| Text(text)
-| Time(text)
+| Text(string)
+| Time(string)
 | Timestamp(time)
 | Tuple(list(parameter))
 }
+
+// Ignores the response table.
+define void-encoder(_: &table) -> either(encoder-error, unit)
+
+// Creates a command that just executes the given SQL string.
+define statement(t: &string) -> command(unit)
 ```
 
 ### Table
@@ -128,36 +151,35 @@ data parameter {
 data table
 
 // Gets the column size of a table.
-define get-column-size(r: &table): int
+define get-column-size(r: &table) -> int
 
 // Gets the row size of a table.
-define get-row-size(r: &table): int
+define get-row-size(r: &table) -> int
 
 // Gets the column number from a table by specifying column name.
-define get-column-by-name(r: &table, column-name: &text): either(encoder-error, int)
+define get-column-by-name(r: &table, column-name: &string) -> either(encoder-error, int)
 
 // Reads the value at (row, column) in the given table as an integer.
-inline encode-int(r: &table, row: int, column: int): either(encoder-error, int)
+inline encode-int(r: &table, row: int, column: int) -> either(encoder-error, int)
 
 // Reads the value at (row, column) in the given table as a float.
-inline encode-float(r: &table, row: int, column: int): either(encoder-error, float)
+inline encode-float(r: &table, row: int, column: int) -> either(encoder-error, float)
 
-// Reads the value at (row, column) in the given table as a text.
-inline encode-text(r: &table, row: int, column: int): either(encoder-error, text)
+// Reads the value at (row, column) in the given table as a string.
+inline encode-string(r: &table, row: int, column: int) -> either(encoder-error, string)
 
 // Reads the value at (row, column) in the given table as an ISO8601 time.
-inline encode-time(r: &table, row: int, column: int): either(encoder-error, time)
+inline encode-time(r: &table, row: int, column: int) -> either(encoder-error, time)
 ```
 
 ## Example
 
-Suppose we created a table `user` as follows:
+Suppose we created a table `author` as follows:
 
 ```sql
-create table if not exists user (
-  id bigint primary key generated always as identity,
-  name text not null,
-  created_at timestamptz not null
+create table if not exists author (
+  id bigint primary key,
+  name text not null
 )
 ```
 
@@ -166,115 +188,82 @@ create table if not exists user (
 The following code demonstrates a basic usage of `ars-postgres`:
 
 ```neut
-define connect-then-insert-then-select(): unit {
+import {
+  core.list {iterate-E},
+  core.string.io {print-line},
+  this.action {batch, execute, with-transaction},
+  this.command {Command, command},
+  this.connection {Conn-Info, Connection-Error, connect},
+  this.parameter {Integer, Text},
+  this.table {encode-string, get-column-by-name, get-row-size, table},
+}
+
+define get-conninfo() -> this.connection.conninfo {
+  Conn-Info{
+    host := *"127.0.0.1",
+    port := *"5432",
+    dbname := *"sample",
+    user := *"username",
+    password := *"password",
+  }
+}
+
+define connect-then-insert-then-select() -> unit {
   // Establishes a DB connection
-  let conn-or-none = connect(my-conn);
+  let conn-or-none = connect(get-conninfo());
   match conn-or-none {
   | Left(Connection-Error(message)) =>
-    // ...
+    pin message = message;
+    print-line(message)
   | Right(conn) =>
     let result on conn =
-      with-transaction(conn, function () {
+      with-transaction(conn, () => {
         // Executes SQL commands using a connection
-        try _ = execute(conn, insert-user(name1, time1));
-        try _ = execute(conn, insert-user(name2, time2));
-        execute(conn, select-user(5))
+        try _ = batch(conn, "create table if not exists author (id bigint primary key, name text not null)");
+        try _ =
+          execute(conn, Command{
+            template := "insert into author (id, name) values (__ID__, __NAME__)",
+            parameters := List[
+              Pair("__ID__", Integer(1)),
+              Pair("__NAME__", Text(*"Virginia Woolf")),
+            ],
+            result-encoder := this.command.void-encoder,
+          });
+        execute(conn, select-authors(5))
       });
     // (conn is closed here because it is discarded here)
     match result {
-    | Right(user-list) =>
-      // use `user-list: list(user)` as you like
+    | Right(author-list) =>
+      let _ = author-list;
+      // use `author-list` as you like
       print("success\n")
-    | Left(e) =>
-      // use `e` to report an error
+    | Left(_) =>
       print("error\n")
     }
   }
 }
-
 ```
 
 ### Defining Commands
 
-A command that performs `insert` can be defined, for example, as follows:
+Placeholders in `template` are arbitrary marker strings such as `__NAME__`. When executing a command, they are replaced with PostgreSQL parameters like `$1`, `$2`, and so on.
+
+A command that performs `select` can be defined, for example, as follows:
 
 ```neut
-define insert-user(name: &text, now: time): command(unit) {
-  Command of {
-    // A SQL command with placeholders.
-    template = "insert into user (name, created_at) values (__NAME__, __TIMESTAMP__)",
-
-    // A mapping from placeholders to values.
-    //
-    // When executing this SQL command, a parameterized SQL command like the following is constructed:
-    //   insert into user (name, created_at) values ($0, $1)
-    // and this command is executed using libpq's `PQexecParams`, setting the parameter values as the
-    // `paramValues` of `PQexecParams`.
-    parameters = {
-      [
-        Pair("__NAME__", Text(*name)),
-        Pair("__TIMESTAMP__", Timestamp(now)),
-      ]
-    },
-
-    // Specifies how to encode the response of this command.
-    // The response is ignored in this time since we're just inserting values.
-    result-encoder = {
-      function (_: &table) {
-        Right(Unit)
-      }
-    },
-  }
-}
-```
-
-A command that performs `select` can also be defined, for example, as follows:
-
-```neut
-// Represents an user
-data user {
-| User(
-    name: text,
-    created-at: time,
-  )
-}
-
-define select-user(limit: int): command(list(user)) {
-  Command of {
-    // A SQL command with placeholders (again).
-    template = "select user.name, user.created_at from user where user.created_at > __EPOCH__ limit __LIMIT__",
-
-    // A mapping from placeholders to values (again).
-    parameters = {
-      [
-        Pair("__LIMIT__", Integer(limit)),
-        Pair("__EPOCH__", Timestamp(time.time.Time of {seconds = 0, nanoseconds = 0})),
-      ]
-    },
-
-    // Specifies how to encode the response of this command.
-    // Here, we read the result of `select` and print them one by one.
-    result-encoder = {
-      function (res: &table) {
-        // Get the row size of the response.
+define select-authors(limit: int) -> command(list(string)) {
+  Command{
+    template := "select name from author order by id limit __LIMIT__",
+    parameters := List[Pair("__LIMIT__", Integer(limit))],
+    result-encoder := {
+      (res: &table) => {
+        try name-column = get-column-by-name(res, "name");
         let row-size = get-row-size(res);
-
-        // Gets the column indices by column names.
-        try user-name-column = get-column-by-name(res, "name");
-        try user-created-at-column = get-column-by-name(res, "created_at");
-
-        // This `try-iterate` performs `function (r) {..}` for r = 0, ..., (row-size - 1) and creates a
-        // list [f(0), f(1), ..., f(row-size - 1)].
-        // If an iteration fails, `try-iterate` also fails.
-        try-iterate(row-size, function (r) {
-          try name = encode-text(res, r, user-name-column);
-          try created-at = encode-time(res, r, user-created-at-column);
-          Right(User(name, created-at))
+        iterate-E(row-size, (row) => {
+          encode-string(res, row, name-column)
         })
       }
     },
   }
 }
 ```
-
-You may want to use `include-text` when specifying the `template` of a `Command`. See `source/test.nt` for working examples.
