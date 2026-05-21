@@ -1,0 +1,7 @@
+import {
+  core.c-string {c-string, to-string},
+}
+
+inline from-pointer(p: pointer) -> string {
+  to-string(magic cast(pointer, &c-string, p))
+}

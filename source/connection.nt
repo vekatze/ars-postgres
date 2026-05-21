@@ -1,7 +1,8 @@
 import {
-  core.c-string {c-string, from-c-string, to-c-string},
+  core.c-string {c-string, from-string},
+  core.debug {panic},
   core.string {format},
-  core.trick {panic},
+  this._c-string {from-pointer},
   this.foreign {CONNECTION_OK},
 }
 
@@ -37,10 +38,6 @@ nominal {
   define connect(c: conninfo) -> either(connection-error, connection),
 }
 
-inline _from-c-string-pointer(p: pointer) -> string {
-  from-c-string(magic cast(pointer, &c-string, p))
-}
-
 resource _connection {
   (ptr: int) => {
     let ptr = magic cast(int, pointer, ptr);
@@ -49,11 +46,11 @@ resource _connection {
   },
   (ptr: int) => {
     let ptr = magic cast(int, pointer, ptr);
-    let !host = _from-c-string-pointer(magic external PQhost(ptr));
-    let !port = _from-c-string-pointer(magic external PQport(ptr));
-    let !dbname = _from-c-string-pointer(magic external PQdb(ptr));
-    let !user = _from-c-string-pointer(magic external PQuser(ptr));
-    let password = _from-c-string-pointer(magic external PQpass(ptr));
+    let !host = from-pointer(magic external PQhost(ptr));
+    let !port = from-pointer(magic external PQport(ptr));
+    let !dbname = from-pointer(magic external PQdb(ptr));
+    let !user = from-pointer(magic external PQuser(ptr));
+    let password = from-pointer(magic external PQpass(ptr));
     let new-conn = connect(Conn-Info{host, port, dbname, user, password});
     match new-conn {
     | Right(c) =>
@@ -84,7 +81,7 @@ define connect(c: conninfo) -> either(connection-error, connection) {
       user,
       password,
     ]);
-  let conn-string = to-c-string(conn-string);
+  let conn-string = from-string(conn-string);
   let conn on conn-string = magic external PQconnectdb(magic cast(&c-string, pointer, conn-string));
   let _ = conn-string;
   let conn = magic cast(pointer, connection, conn);
@@ -93,7 +90,7 @@ define connect(c: conninfo) -> either(connection-error, connection) {
     Right(conn)
   } else {
     let e on conn =
-      Connection-Error(_from-c-string-pointer(magic external PQerrorMessage(
+      Connection-Error(from-pointer(magic external PQerrorMessage(
         magic cast(&connection, pointer, conn),
       )));
     let _ = conn;

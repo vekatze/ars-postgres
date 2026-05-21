@@ -2,7 +2,6 @@ import {
   core.float.show {show-float},
   core.list {iterate-E},
   core.string {from-text},
-  core.string.io {print-line},
   this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
   this.command {Command, command},
   this.connection {Conn-Info, Connection-Error, connect},

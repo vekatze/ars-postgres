@@ -1,7 +1,7 @@
 {
   target {
     test {
-      main "test.nt",
+      main "_test.nt",
       build-option [
         "$(pkg-config libpq --libs --cflags)",
         // (AddressSanitizer might report memory leaks in libpq on macOS)
@@ -32,16 +32,16 @@
   },
   dependency {
     core {
-      digest "yNWbpR6FH89l8vrvc2fh4PMZYlLEGtCzBHxT8aZQS5o",
+      digest "AX53Hz1GVFQcEX-csE0C33px9odb_zm98r5nRFnMvRg",
       mirror [
-        "https://github.com/vekatze/neut-core/raw/main/archive/0-54-9.tar.zst",
+        "https://github.com/vekatze/neut-core/raw/main/archive/0-55-1.tar.zst",
       ],
       enable-preset true,
     },
     time {
-      digest "z9BK5qI3S5hE_xEavZ0wN9rboOg9uEPY8brRr_uFucc",
+      digest "laKHnIutOvPYqZeCDa6z6fDn1ltqNMN4HoF7KoOlebk",
       mirror [
-        "https://github.com/vekatze/time-nt/raw/main/archive/0-4-58.tar.zst",
+        "https://github.com/vekatze/time-nt/raw/main/archive/0-4-59.tar.zst",
       ],
     },
   },

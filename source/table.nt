@@ -1,7 +1,7 @@
 import {
   core.c-int {C-Int, c-int, from-c-int},
-  core.c-string {c-string, from-c-string, to-c-string},
-  core.memory {load-int8, load-pointer},
+  core.c-string {c-string, from-string, to-string},
+  core.memory.unsafe {load-int8, load-pointer},
   core.string {replace},
   time.time {from-ISO8601, time},
 }
@@ -38,7 +38,7 @@ inline _to-c-int(x: int) -> c-int {
 }
 
 define get-column-by-name(r: &table, column-name: &string) -> either(encoder-error, int) {
-  pin c-column-name = to-c-string(column-name);
+  pin c-column-name = from-string(column-name);
   let result =
     magic external PQfnumber(
       magic cast(&table, pointer, r),
@@ -67,7 +67,7 @@ inline encode-int(r: &table, row: int, column: int) -> either(encoder-error, int
   if eq-int8(end-char, 0) {
     Right(int-val)
   } else {
-    Left(Int-Parse-Error(row, column, from-c-string(c-int-str)))
+    Left(Int-Parse-Error(row, column, to-string(c-int-str)))
   }
 }
 
@@ -85,7 +85,7 @@ inline encode-float(r: &table, row: int, column: int) -> either(encoder-error, f
   if eq-int8(end-char, 0) {
     Right(float-val)
   } else {
-    Left(Float-Parse-Error(row, column, from-c-string(magic cast(pointer, &c-string, c-float-str))))
+    Left(Float-Parse-Error(row, column, to-string(magic cast(pointer, &c-string, c-float-str))))
   }
 }
 
@@ -93,14 +93,14 @@ inline encode-string(r: &table, row: int, column: int) -> either(encoder-error, 
   let r = magic cast(&table, pointer, r);
   let row = _to-c-int(row);
   let column = _to-c-int(column);
-  Right(from-c-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row, column))))
+  Right(to-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row, column))))
 }
 
 inline encode-time(r: &table, row: int, column: int) -> either(encoder-error, time) {
   let r = magic cast(&table, pointer, r);
   let row-c = _to-c-int(row);
   let column-c = _to-c-int(column);
-  let date-string = from-c-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row-c, column-c)));
+  let date-string = to-string(magic cast(pointer, &c-string, magic external PQgetvalue(r, row-c, column-c)));
   let date-string-replaced on date-string = replace(date-string, " ", *"T");
   let time-or-none on date-string-replaced = from-ISO8601(date-string-replaced);
   let _ = date-string-replaced;

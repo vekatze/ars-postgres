@@ -1,13 +1,5 @@
 import {
-  core.box {axiom-T},
-  core.c-string {c-string, to-c-string},
-  core.cell {make-cell, mutate},
-  core.float.show {show-float},
-  core.int.show {show-int},
-  core.list {append, concat, for-each, length, unzip},
-  core.string {format, intercalate},
-  this.constant {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
-  time.time {time, to-ISO8601-UTC},
+  time.time {time},
 }
 
 data parameter {
@@ -19,104 +11,6 @@ data parameter {
 | Tuple(list(parameter))
 }
 
-alias oid {
-  int
-}
-
-alias sql-param {
-  pair(oid, c-string)
-}
-
-define _new-placeholder(counter: &cell(int)) -> string {
-  let i = core.cell.clone(counter);
-  mutate(counter, (x) => {
-    lift {add-int(axiom-T(x), 1)}
-  });
-  format("${}", List[show-int(i)])
-}
-
-define _interpret-param(counter: &cell(int), p: parameter) -> pair(string, list(sql-param)) {
-  match p {
-  | Integer(x) =>
-    pin tmp = show-int(x);
-    Pair(_new-placeholder(counter), List[Pair(INT8OID, to-c-string(tmp))])
-  | Float(x) =>
-    pin tmp = show-float(x, 6);
-    Pair(_new-placeholder(counter), List[Pair(FLOAT8OID, to-c-string(tmp))])
-  | Text(x) =>
-    pin x = x;
-    Pair(_new-placeholder(counter), List[Pair(TEXTOID, to-c-string(x))])
-  | Time(x) =>
-    pin x = x;
-    Pair(_new-placeholder(counter), List[Pair(TIMEOID, to-c-string(x))])
-  | Timestamp(t) =>
-    pin tmp = to-ISO8601-UTC(t, 6);
-    Pair(_new-placeholder(counter), List[Pair(TIMESTAMPTZOID, to-c-string(tmp))])
-  | Tuple(ps) =>
-    let Pair(xs, pss) =
-      unzip(for-each(ps, (p) => {
-        _interpret-param(counter, p)
-      }));
-    Pair(format("({})", List[intercalate(xs, *", ")]), concat(pss))
-  }
-}
-
-define _replace-or-fail(haystack: &string, from: &string, to: string) -> ?string {
-  let tmp = core.string.split(haystack, from);
-  let len on tmp = length(tmp);
-  if ge-int(len, 2) {
-    Right(core.string.intercalate(tmp, to))
-  } else {
-    none
-  }
-}
-
 data preparation-error {
 | Unknown-Placeholder(string)
-}
-
-data prepared-command {
-| Prepared-Command(
-    template: string,
-    parameters: list(sql-param),
-  )
-}
-
-define _replace(
-  counter: &cell(int),
-  prepared-params: list(sql-param),
-  template: string,
-  ps: list(pair(&string, parameter)),
-) -> either(preparation-error, prepared-command) {
-  match ps {
-  | Nil =>
-    let result on template = core.string.append(template, "\0");
-    let _ = template;
-    Right(Prepared-Command(result, prepared-params))
-  | Cons(Pair(from, param), rest) =>
-    let Pair(to, ps) = _interpret-param(counter, param);
-    let new-template-or-none on template = _replace-or-fail(template, from, to);
-    let _ = template;
-    match new-template-or-none {
-    | Right(new-template) =>
-      _replace(
-        counter,
-        append(prepared-params, ps),
-        new-template,
-        rest,
-      )
-    | Left(_) =>
-      Left(Unknown-Placeholder(*from))
-    }
-  }
-}
-
-define _prepare(
-  template: &string,
-  parameters: list(pair(&string, parameter)),
-) -> either(preparation-error, prepared-command) {
-  let counter = make-cell(lift {1});
-  let result on counter = _replace(counter, List[], *template, parameters);
-  let _ = counter;
-  result
 }
