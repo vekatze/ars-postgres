@@ -1,13 +1,14 @@
 import {
-  core.box {axiom-T},
-  core.c-string {c-string, from-string},
-  core.cell {cell, make-cell, mutate},
-  core.float.show {show-float},
-  core.int.show {show-int},
-  core.list {append, concat, for-each, length, unzip},
-  core.string {format, intercalate},
-  this.constant {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
-  this.parameter {
+  core::c-string {c-string, from-string},
+  core::cell {cell, make-cell, mutate},
+  core::float.show {show-float},
+  core::int.show {show-int},
+  core::layer {axiom-T},
+  core::list {append, concat, for-each, length, unzip},
+  core::string {format, intercalate},
+  core::time {to-ISO8601-UTC},
+  constant {FLOAT8OID, INT8OID, TEXTOID, TIMEOID, TIMESTAMPTZOID},
+  parameter {
     Float,
     Integer,
     Text,
@@ -18,7 +19,6 @@ import {
     parameter,
     preparation-error,
   },
-  time.time {to-ISO8601-UTC},
 }
 
 alias oid {
@@ -37,44 +37,44 @@ data prepared-command {
 }
 
 define _new-placeholder(counter: &cell(int)) -> string {
-  let i = core.cell.clone(counter);
+  let i = core::cell.clone(counter);
   mutate(counter, (x) => {
     lift {add-int(axiom-T(x), 1)}
   });
-  format("${}", List[show-int(i)])
+  format("${}", List::[show-int(i)])
 }
 
 define _interpret-param(counter: &cell(int), p: parameter) -> pair(string, list(sql-param)) {
   match p {
   | Integer(x) =>
     pin tmp = show-int(x);
-    Pair(_new-placeholder(counter), List[Pair(INT8OID, from-string(tmp))])
+    Pair(_new-placeholder(counter), List::[Pair(INT8OID, from-string(tmp))])
   | Float(x) =>
-    pin tmp = show-float(x, 6);
-    Pair(_new-placeholder(counter), List[Pair(FLOAT8OID, from-string(tmp))])
+    pin tmp = show-float(x);
+    Pair(_new-placeholder(counter), List::[Pair(FLOAT8OID, from-string(tmp))])
   | Text(x) =>
     pin x = x;
-    Pair(_new-placeholder(counter), List[Pair(TEXTOID, from-string(x))])
+    Pair(_new-placeholder(counter), List::[Pair(TEXTOID, from-string(x))])
   | Time(x) =>
     pin x = x;
-    Pair(_new-placeholder(counter), List[Pair(TIMEOID, from-string(x))])
+    Pair(_new-placeholder(counter), List::[Pair(TIMEOID, from-string(x))])
   | Timestamp(t) =>
     pin tmp = to-ISO8601-UTC(t, 6);
-    Pair(_new-placeholder(counter), List[Pair(TIMESTAMPTZOID, from-string(tmp))])
+    Pair(_new-placeholder(counter), List::[Pair(TIMESTAMPTZOID, from-string(tmp))])
   | Tuple(ps) =>
     let Pair(xs, pss) =
       unzip(for-each(ps, (p) => {
         _interpret-param(counter, p)
       }));
-    Pair(format("({})", List[intercalate(xs, *", ")]), concat(pss))
+    Pair(format("({})", List::[intercalate(xs, *", ")]), concat(pss))
   }
 }
 
 define _replace-or-fail(haystack: &string, from: &string, to: string) -> ?string {
-  let tmp = core.string.split(haystack, from);
+  let tmp = core::string.split(haystack, from);
   let len on tmp = length(tmp);
   if ge-int(len, 2) {
-    Right(core.string.intercalate(tmp, to))
+    Right(core::string.intercalate(tmp, to))
   } else {
     none
   }
@@ -88,7 +88,7 @@ define _replace(
 ) -> either(preparation-error, prepared-command) {
   match ps {
   | Nil =>
-    let result on template = core.string.append(template, "\0");
+    let result on template = core::string.append(template, "\0");
     let _ = template;
     Right(Prepared-Command(result, prepared-params))
   | Cons(Pair(from, param), rest) =>
@@ -114,7 +114,7 @@ define prepare(
   parameters: list(pair(&string, parameter)),
 ) -> either(preparation-error, prepared-command) {
   let counter = make-cell(lift {1});
-  let result on counter = _replace(counter, List[], *template, parameters);
+  let result on counter = _replace(counter, List::[], *template, parameters);
   let _ = counter;
   result
 }

@@ -1,21 +1,21 @@
 import {
-  core.c-string {c-string, from-string},
-  core.control {discard},
-  core.list {length},
-  core.memory.unsafe {store-int},
-  core.pointer {null-pointer, shift},
-  core.word,
-  this._c-string {from-pointer},
-  this._parameter {Prepared-Command, prepare, sql-param},
-  this.command {Command, command},
-  this.connection {connection},
-  this.foreign {
+  core::c-string {c-string, from-string},
+  core::control {discard},
+  core::list {length},
+  core::memory.unsafe {store-int},
+  core::pointer {null-pointer, shift},
+  core::word,
+  _c-string {from-pointer},
+  _parameter {Prepared-Command, prepare, sql-param},
+  command {Command, command},
+  connection {connection},
+  foreign {
     OID_SIZE,
     PGRES_COMMAND_OK,
     PGRES_TUPLES_OK,
   },
-  this.parameter {preparation-error},
-  this.table {encoder-error, table},
+  parameter {preparation-error},
+  table {encoder-error, table},
 }
 
 foreign {
@@ -38,7 +38,7 @@ define _store-elems(elems: &list(sql-param), ptr: pointer) -> unit {
     Unit
   | Cons(Pair(_, x), xs) =>
     store-int(magic cast(&c-string, int, x), ptr);
-    _store-elems(xs, shift(ptr, core.word.size))
+    _store-elems(xs, shift(ptr, core::word.size))
   }
 }
 

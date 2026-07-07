@@ -1,9 +1,9 @@
 import {
-  core.c-string {c-string, from-string},
-  core.debug {panic},
-  core.string {format},
-  this._c-string {from-pointer},
-  this.foreign {CONNECTION_OK},
+  core::c-string {c-string, from-string},
+  core::debug {panic},
+  core::string {format},
+  _c-string {from-pointer},
+  foreign {CONNECTION_OK},
 }
 
 foreign {
@@ -39,13 +39,11 @@ nominal {
 }
 
 resource _connection {
-  (ptr: int) => {
-    let ptr = magic cast(int, pointer, ptr);
+  (ptr: pointer, _: int) => {
     let _ = magic external PQfinish(ptr);
     Unit
   },
-  (ptr: int) => {
-    let ptr = magic cast(int, pointer, ptr);
+  (ptr: pointer, _: pointer) => {
     let !host = from-pointer(magic external PQhost(ptr));
     let !port = from-pointer(magic external PQport(ptr));
     let !dbname = from-pointer(magic external PQdb(ptr));
@@ -54,12 +52,12 @@ resource _connection {
     let new-conn = connect(Conn-Info{host, port, dbname, user, password});
     match new-conn {
     | Right(c) =>
-      magic cast(connection, int, c)
+      magic cast(connection, pointer, c)
     | Left(_) =>
       pin message =
         format(
           "failed to clone the following connection:\nhost={} port={} dbname={} user={} password=<hidden>\n",
-          List[host, port, dbname, user],
+          List::[host, port, dbname, user],
         );
       panic(message)
     }
@@ -74,7 +72,7 @@ data connection {
 define connect(c: conninfo) -> either(connection-error, connection) {
   let Conn-Info{host, port, dbname, user, password} = c;
   pin conn-string =
-    format("host={} port={} dbname={} user={} password={}", List[
+    format("host={} port={} dbname={} user={} password={}", List::[
       host,
       port,
       dbname,
@@ -84,7 +82,7 @@ define connect(c: conninfo) -> either(connection-error, connection) {
   let conn-string = from-string(conn-string);
   let conn on conn-string = magic external PQconnectdb(magic cast(&c-string, pointer, conn-string));
   let _ = conn-string;
-  let conn = magic cast(pointer, connection, conn);
+  let conn = _Connection(magic cast(pointer, _connection, conn));
   let status: int on conn = magic external PQstatus(magic cast(&connection, pointer, conn));
   if eq-int(status, CONNECTION_OK) {
     Right(conn)

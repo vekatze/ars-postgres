@@ -25,24 +25,18 @@
       "{{clang}} $(pkg-config libpq --libs --cflags) -c -flto=thin -O2 source/foreign.c -o {{foreign}}/foreign.o",
     ],
   },
-  text-file {
+  static-file {
     reset "source/sql/reset.sql",
     insert-author "source/sql/author/insert.sql",
     select-author "source/sql/author/select.sql",
   },
   dependency {
     core {
-      digest "AX53Hz1GVFQcEX-csE0C33px9odb_zm98r5nRFnMvRg",
+      digest "RLaLjCZoLt65O8qMrKmXudRUKfMMBLP9E0kYU7zP0tw",
       mirror [
-        "https://github.com/vekatze/neut-core/raw/main/archive/0-55-1.tar.zst",
+        "https://github.com/vekatze/neut-core/raw/main/archive/0-55-23.tar.zst",
       ],
       enable-preset true,
-    },
-    time {
-      digest "laKHnIutOvPYqZeCDa6z6fDn1ltqNMN4HoF7KoOlebk",
-      mirror [
-        "https://github.com/vekatze/time-nt/raw/main/archive/0-4-59.tar.zst",
-      ],
     },
   },
 }

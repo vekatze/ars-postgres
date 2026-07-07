@@ -1,9 +1,9 @@
 import {
-  core.c-int {C-Int, c-int, from-c-int},
-  core.c-string {c-string, from-string, to-string},
-  core.memory.unsafe {load-int8, load-pointer},
-  core.string {replace},
-  time.time {from-ISO8601, time},
+  core::c-int {C-Int, c-int, from-c-int},
+  core::c-string {c-string, from-string, to-string},
+  core::memory.unsafe {load-int8, load-pointer},
+  core::string {replace},
+  core::time {from-ISO8601, time},
 }
 
 foreign {

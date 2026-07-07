@@ -1,5 +1,5 @@
 import {
-  core.c-string {c-string, to-string},
+  core::c-string {c-string, to-string},
 }
 
 inline from-pointer(p: pointer) -> string {

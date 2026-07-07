@@ -1,21 +1,21 @@
 import {
-  core.float.show {show-float},
-  core.list {iterate-E},
-  core.string {from-text},
-  this.action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
-  this.command {Command, command},
-  this.connection {Conn-Info, Connection-Error, connect},
-  this.parameter {Float, Integer, Text, Time, Timestamp, Unknown-Placeholder},
-  this.table {encode-float, encode-string, encode-time, get-column-by-name, get-row-size, table},
-  time.time {get-time, time, to-ISO8601-local},
-  text-file {
+  core::float.show {show-float},
+  core::list {iterate-E},
+  core::string {from-text},
+  core::time {get-time, time, to-ISO8601-local},
+  action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
+  command {Command, command},
+  connection {Conn-Info, Connection-Error, connect},
+  parameter {Float, Integer, Text, Time, Timestamp, Unknown-Placeholder},
+  table {encode-float, encode-string, encode-time, get-column-by-name, get-row-size, table},
+  static-file {
     insert-author,
     reset,
     select-author,
   },
 }
 
-define get-conninfo() -> this.connection.conninfo {
+define get-conninfo() -> connection.conninfo {
   Conn-Info{
     host := *"127.0.0.1",
     port := *"5432",
@@ -29,7 +29,7 @@ define insert-author(name: &string, some-value: float, now: time) -> command(uni
   Command{
     template := from-text(static insert-author),
     parameters := {
-      List[
+      List::[
         Pair("__NAME__", Text(*name)),
         Pair("__SOME_VALUE__", Float(some-value)),
         Pair("__MY_TIME__", Time(*"11:23")),
@@ -56,9 +56,9 @@ define select-author(limit: int) -> command(list(author)) {
   Command{
     template := from-text(static select-author),
     parameters := {
-      List[
+      List::[
         Pair("__LIMIT__", Integer(limit)),
-        Pair("__EPOCH__", Timestamp(time.time.Time{seconds := 0, nanoseconds := 0})),
+        Pair("__EPOCH__", Timestamp(core::time.make-time{seconds := 0, nanoseconds := 0})),
       ]
     },
     result-encoder := {
@@ -84,7 +84,7 @@ define _print-authors(xs: list(author)) -> unit {
     Unit
   | Cons(Author(name, value, created-at), rest) =>
     pin name = name;
-    pin value = show-float(value, 6);
+    pin value = show-float(value);
     pin time = to-ISO8601-local(created-at, 6);
     print(name);
     print(" ");
@@ -108,7 +108,7 @@ define main() -> unit {
           execute(conn, insert-author(
             "Aristotle",
             1.12,
-            time.time.Time{seconds := -9999999, nanoseconds := 123456789},
+            core::time.make-time{seconds := -9999999, nanoseconds := 123456789},
           ));
         try _ = execute(conn, insert-author("李白", 3.38, n));
         try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, n));

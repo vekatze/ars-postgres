@@ -1,6 +1,6 @@
 import {
-  this.parameter {parameter},
-  this.table {encoder-error, table},
+  parameter {parameter},
+  table {encoder-error, table},
 }
 
 data command(a) {
@@ -18,7 +18,7 @@ define void-encoder(_: &table) -> either(encoder-error, unit) {
 define statement(t: &string) -> command(unit) {
   Command{
     template := t,
-    parameters := List[],
+    parameters := List::[],
     result-encoder := void-encoder,
   }
 }
