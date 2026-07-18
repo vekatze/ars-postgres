@@ -1,6 +1,6 @@
 import {
-  parameter {parameter},
-  table {encoder-error, table},
+  this::parameter {parameter},
+  this::table {encoder-error, table},
 }
 
 data command(a) {

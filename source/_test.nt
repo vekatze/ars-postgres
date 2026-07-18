@@ -3,11 +3,11 @@ import {
   core::list {iterate-E},
   core::string {from-text},
   core::time {get-time, time, to-ISO8601-local},
-  action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
-  command {Command, command},
-  connection {Conn-Info, Connection-Error, connect},
-  parameter {Float, Integer, Text, Time, Timestamp, Unknown-Placeholder},
-  table {encode-float, encode-string, encode-time, get-column-by-name, get-row-size, table},
+  this::action {Command-Error, Encoder-Error, Preparation-Error, batch, execute, with-transaction},
+  this::command {Command, command},
+  this::connection {Conn-Info, Connection-Error, connect},
+  this::parameter {Float, Integer, Text, Time, Timestamp, Unknown-Placeholder},
+  this::table {encode-float, encode-string, encode-time, get-column-by-name, get-row-size, table},
   static-file {
     insert-author,
     reset,
@@ -15,7 +15,7 @@ import {
   },
 }
 
-define get-conninfo() -> connection.conninfo {
+define get-conninfo() -> this::connection::conninfo {
   Conn-Info{
     host := *"127.0.0.1",
     port := *"5432",
@@ -58,7 +58,7 @@ define select-author(limit: int) -> command(list(author)) {
     parameters := {
       List::[
         Pair("__LIMIT__", Integer(limit)),
-        Pair("__EPOCH__", Timestamp(core::time.make-time{seconds := 0, nanoseconds := 0})),
+        Pair("__EPOCH__", Timestamp(core::time::make-time{seconds := 0, nanoseconds := 0})),
       ]
     },
     result-encoder := {
@@ -108,7 +108,7 @@ define main() -> unit {
           execute(conn, insert-author(
             "Aristotle",
             1.12,
-            core::time.make-time{seconds := -9999999, nanoseconds := 123456789},
+            core::time::make-time{seconds := -9999999, nanoseconds := 123456789},
           ));
         try _ = execute(conn, insert-author("李白", 3.38, n));
         try _ = execute(conn, insert-author("Emily Dickinson", 0002.123456789, n));

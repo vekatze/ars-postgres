@@ -1,9 +1,8 @@
 import {
   core::c-string {c-string, from-string},
-  core::debug {panic},
   core::string {format},
-  _c-string {from-pointer},
-  foreign {CONNECTION_OK},
+  this::_c-string {from-pointer},
+  this::foreign {CONNECTION_OK},
 }
 
 foreign {
