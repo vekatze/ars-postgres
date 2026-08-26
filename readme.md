@@ -33,7 +33,7 @@ pkg-config libpq --libs --cflags
 Add `ars-postgres` to your project:
 
 ```sh
-neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0-1-55.tar.zst
+neut get ars-postgres https://github.com/vekatze/ars-postgres/raw/main/archive/0.2.0.tar.zst
 ```
 
 ### Configure Your Project
@@ -81,7 +81,7 @@ data conninfo {
   )
 }
 
-// Represents an error happened while establishing a connection.
+// Represents an error that occurred while establishing a connection.
 data connection-error {
 | Connection-Error(message: string)
 }
@@ -189,16 +189,16 @@ The following code demonstrates a basic usage of `ars-postgres`:
 
 ```neut
 import {
-  core.list {iterate-E},
-  core.string.io {print-line},
-  this.action {batch, execute, with-transaction},
-  this.command {Command, command},
-  this.connection {Conn-Info, Connection-Error, connect},
-  this.parameter {Integer, Text},
-  this.table {encode-string, get-column-by-name, get-row-size, table},
+  core::list {iterate-E},
+  core::string.io {print-line},
+  this::action {batch, execute, with-transaction},
+  this::command {Command, command},
+  this::connection {Conn-Info, Connection-Error, connect},
+  this::parameter {Integer, Text},
+  this::table {encode-string, get-column-by-name, get-row-size, table},
 }
 
-define get-conninfo() -> this.connection.conninfo {
+define get-conninfo() -> this::connection::conninfo {
   Conn-Info{
     host := *"127.0.0.1",
     port := *"5432",
@@ -223,11 +223,11 @@ define connect-then-insert-then-select() -> unit {
         try _ =
           execute(conn, Command{
             template := "insert into author (id, name) values (__ID__, __NAME__)",
-            parameters := List[
+            parameters := List::[
               Pair("__ID__", Integer(1)),
               Pair("__NAME__", Text(*"Virginia Woolf")),
             ],
-            result-encoder := this.command.void-encoder,
+            result-encoder := this::command::void-encoder,
           });
         execute(conn, select-authors(5))
       });
@@ -254,7 +254,7 @@ A command that performs `select` can be defined, for example, as follows:
 define select-authors(limit: int) -> command(list(string)) {
   Command{
     template := "select name from author order by id limit __LIMIT__",
-    parameters := List[Pair("__LIMIT__", Integer(limit))],
+    parameters := List::[Pair("__LIMIT__", Integer(limit))],
     result-encoder := {
       (res: &table) => {
         try name-column = get-column-by-name(res, "name");
