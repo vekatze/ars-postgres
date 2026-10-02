@@ -3,16 +3,10 @@
     test {
       main "_test.nt",
       build-option [
-        "$(pkg-config libpq --libs --cflags)",
         // (AddressSanitizer might report memory leaks in libpq on macOS)
         "-fsanitize=address",
       ],
     },
-  },
-  zen {
-    build-option [
-      "$(pkg-config libpq --libs --cflags)",
-    ],
   },
   foreign {
     input [
@@ -21,8 +15,14 @@
     output [
       "foreign.o",
     ],
+    link [
+      "foreign.o",
+    ],
+    transitive-link-option [
+      "$(pkg-config libpq --libs)",
+    ],
     script [
-      "{{clang}} $(pkg-config libpq --libs --cflags) -c -flto=thin -O2 source/foreign.c -o {{foreign}}/foreign.o",
+      "{{clang}} $(pkg-config libpq --cflags) -c -flto=thin -O2 source/foreign.c -o {{foreign}}/foreign.o",
     ],
   },
   static-file {
